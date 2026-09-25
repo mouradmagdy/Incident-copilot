@@ -1,0 +1,26 @@
+using IncidentCopilot.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace IncidentCopilot.Infrastructure.Persistence;
+
+public class IncidentCopilotDbContext : DbContext
+{
+    public IncidentCopilotDbContext(
+        DbContextOptions<IncidentCopilotDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<MonitoredService> Services => Set<MonitoredService>();
+
+    public DbSet<ServiceMetric> ServiceMetrics => Set<ServiceMetric>();
+
+    public DbSet<LogEvent> LogEvents => Set<LogEvent>();
+
+    public DbSet<Incident> Incidents => Set<Incident>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(IncidentCopilotDbContext).Assembly);
+    }
+}

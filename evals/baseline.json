@@ -1,0 +1,17 @@
+[
+  {
+    "id": "current-latency",
+    "question": "What is OrderService's current p95 latency?",
+    "requiresLiveData": true
+  },
+  {
+    "id": "current-root-cause",
+    "question": "Why is OrderService currently slow?",
+    "requiresLiveData": true
+  },
+  {
+    "id": "connection-pooling",
+    "question": "What is database connection pooling?",
+    "requiresLiveData": false
+  }
+]

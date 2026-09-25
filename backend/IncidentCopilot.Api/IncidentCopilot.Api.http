@@ -1,6 +1,12 @@
 @IncidentCopilot.Api_HostAddress = http://localhost:5087
 
-GET {{IncidentCopilot.Api_HostAddress}}/weatherforecast/
+POST {{IncidentCopilot.Api_HostAddress}}/api/llm/generate
+Content-Type: application/json
 Accept: application/json
+
+{
+  "systemPrompt": "You are a concise operations assistant.",
+  "userMessage": "Explain what a database connection pool does."
+}
 
 ###

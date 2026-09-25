@@ -4,6 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>incident-copilot-api-4f67fbb4-f370-42ce-9508-f5dad060c31a</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

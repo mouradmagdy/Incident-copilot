@@ -1,4 +1,6 @@
 using IncidentCopilot.Api.Endpoints;
+using IncidentCopilot.Core.AI;
+using IncidentCopilot.Infrastructure.AI;
 using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +8,33 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen();
+
+builder.Services
+    .AddOptions<GroqOptions>()
+    .Bind(builder.Configuration.GetSection(GroqOptions.SectionName))
+    .PostConfigure(options =>
+    {
+        if (string.IsNullOrWhiteSpace(options.ApiKey))
+        {
+            options.ApiKey = builder.Configuration["GROQ_API_KEY"]
+                ?? string.Empty;
+        }
+    })
+    .Validate(
+        options => !string.IsNullOrWhiteSpace(options.ApiKey),
+        "A Groq API key must be configured using Groq:ApiKey, " +
+        "Groq__ApiKey, or GROQ_API_KEY.")
+    .Validate(
+        options => Uri.TryCreate(
+            options.BaseUrl,
+            UriKind.Absolute,
+            out _),
+        "Groq:BaseUrl must be an absolute URL.")
+    .Validate(
+        options => !string.IsNullOrWhiteSpace(options.Model),
+        "Groq:Model must be configured.");
+
+builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
 
 builder.Services.AddDbContext<IncidentCopilotDbContext>(options =>
     options.UseNpgsql(

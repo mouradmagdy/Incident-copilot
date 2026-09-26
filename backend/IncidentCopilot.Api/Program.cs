@@ -6,6 +6,7 @@ using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Pgvector.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,7 +69,8 @@ builder.Services.AddTransient<IEmbeddingClient, FastApiEmbeddingClient>();
 
 builder.Services.AddDbContext<IncidentCopilotDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions => npgsqlOptions.UseVector()));
 
 
 if (builder.Environment.IsDevelopment())

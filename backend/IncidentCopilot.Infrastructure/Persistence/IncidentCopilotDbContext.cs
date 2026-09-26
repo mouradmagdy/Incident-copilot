@@ -19,8 +19,16 @@ public class IncidentCopilotDbContext : DbContext
 
     public DbSet<Incident> Incidents => Set<Incident>();
 
+    public DbSet<KnowledgeDocument> KnowledgeDocuments =>
+        Set<KnowledgeDocument>();
+
+    public DbSet<KnowledgeDocumentChunk> KnowledgeDocumentChunks =>
+        Set<KnowledgeDocumentChunk>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("vector");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IncidentCopilotDbContext).Assembly);
     }
 }

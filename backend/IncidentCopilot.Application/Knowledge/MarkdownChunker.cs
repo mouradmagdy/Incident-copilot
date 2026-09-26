@@ -1,0 +1,94 @@
+namespace IncidentCopilot.Application.Knowledge;
+
+public sealed class MarkdownChunker : IMarkdownChunker
+{
+    private const int TargetChunkSize = 800;
+    private const int OverlapSize = 100;
+
+    public IReadOnlyList<TextChunk> Chunk(string markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+        {
+            return [];
+        }
+        var blocks = markdown
+            .Replace("\r\n", "\n")
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var chunks = new List<TextChunk>();
+        var currentParts= new List<string>();
+        var currentLength = 0;
+        string? currentSection = null;
+        foreach(var block in blocks)
+        {
+            if (block.StartsWith("#"))
+            {
+                currentSection = block.TrimStart('#').Trim();
+            }
+            var additionalLength = block.Length + (currentParts.Count > 0 ? 2 : 0);
+
+            if (currentParts.Count > 0 && currentLength + additionalLength > TargetChunkSize)
+            {
+                AddChunk(chunks, currentParts, currentSection);
+
+                currentParts = GetOverlapParts(currentParts);
+                currentLength = CalculateLength(currentParts);
+            }
+            currentParts.Add(block);
+            currentLength += additionalLength;
+        }
+        if (currentParts.Count > 0)
+        {
+            AddChunk(chunks, currentParts, currentSection);
+        }
+        return chunks;
+    }
+    private static void AddChunk(
+          List<TextChunk> chunks,
+          List<string> parts,
+          string? section)
+    {
+        var content = string.Join("\n\n", parts).Trim();
+
+        if (string.IsNullOrWhiteSpace(content))
+            return;
+
+        chunks.Add(new TextChunk(
+            chunks.Count,
+            content,
+            section));
+    }
+
+    private static List<string> GetOverlapParts(
+        List<string> parts)
+    {
+        var overlap = new List<string>();
+        var length = 0;
+
+        for (var i = parts.Count - 1; i >= 0; i--)
+        {
+            var part = parts[i];
+
+            if (length + part.Length > OverlapSize &&
+                overlap.Count > 0)
+            {
+                break;
+            }
+
+            overlap.Insert(0, part);
+            length += part.Length;
+
+            if (length >= OverlapSize)
+                break;
+        }
+
+        return overlap;
+    }
+
+    private static int CalculateLength(
+        List<string> parts)
+    {
+        return string.Join("\n\n", parts).Length;
+    }
+
+}

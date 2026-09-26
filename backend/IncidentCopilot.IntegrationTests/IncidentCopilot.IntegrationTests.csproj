@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IncidentCopilot.Application\IncidentCopilot.Application.csproj" />
     <ProjectReference Include="..\IncidentCopilot.Api\IncidentCopilot.Api.csproj" />
   </ItemGroup>
 

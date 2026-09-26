@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IncidentCopilot.Application\IncidentCopilot.Application.csproj" />
     <ProjectReference Include="..\IncidentCopilot.Core\IncidentCopilot.Core.csproj" />
     <ProjectReference Include="..\IncidentCopilot.Infrastructure\IncidentCopilot.Infrastructure.csproj" />
   </ItemGroup>

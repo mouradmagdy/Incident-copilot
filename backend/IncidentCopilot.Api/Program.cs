@@ -1,9 +1,11 @@
 using IncidentCopilot.Api.Endpoints;
+using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
 using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,34 @@ builder.Services
         "Groq:Model must be configured.");
 
 builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
+builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
+
+builder.Services
+    .AddOptions<EmbeddingServiceOptions>()
+    .Bind(builder.Configuration.GetSection(
+        EmbeddingServiceOptions.SectionName))
+    .Validate(
+        options => Uri.TryCreate(
+            options.BaseUrl,
+            UriKind.Absolute,
+            out _),
+        "EmbeddingService:BaseUrl must be an absolute URL.")
+    .ValidateOnStart();
+
+builder.Services.AddHttpClient(
+    FastApiEmbeddingClient.HttpClientName,
+    (serviceProvider, client) =>
+    {
+        var options = serviceProvider
+            .GetRequiredService<IOptions<EmbeddingServiceOptions>>()
+            .Value;
+
+        client.BaseAddress = new Uri(
+            $"{options.BaseUrl.TrimEnd('/')}/",
+            UriKind.Absolute);
+    });
+
+builder.Services.AddTransient<IEmbeddingClient, FastApiEmbeddingClient>();
 
 builder.Services.AddDbContext<IncidentCopilotDbContext>(options =>
     options.UseNpgsql(

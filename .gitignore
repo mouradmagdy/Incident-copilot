@@ -32,6 +32,12 @@ coverage.cobertura.xml
 **/coverage/
 *.tsbuildinfo
 
+# Python build and virtual-environment output
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+*.py[cod]
+
 # Local environment and secrets
 .env
 .env.*

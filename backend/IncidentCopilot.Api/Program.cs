@@ -93,6 +93,7 @@ builder.Services.AddDbContext<IncidentCopilotDbContext>(options =>
 builder.Services.AddScoped<
     IKnowledgeDocumentRepository,
     KnowledgeDocumentRepository>();
+builder.Services.AddScoped<IKnowledgeRetriever, KnowledgeRetriever>();
 
 
 if (builder.Environment.IsDevelopment())

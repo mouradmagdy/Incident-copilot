@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 
 #nullable disable
 
@@ -20,6 +21,7 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("IncidentCopilot.Core.Entities.Incident", b =>
@@ -61,6 +63,65 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .IsDescending(false, true);
 
                     b.ToTable("Incidents");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.KnowledgeDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("IndexedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KnowledgeDocuments");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.KnowledgeDocumentChunk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("integer");
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(384)");
+
+                    b.Property<string>("Section")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId", "ChunkIndex")
+                        .IsUnique();
+
+                    b.ToTable("KnowledgeDocumentChunks");
                 });
 
             modelBuilder.Entity("IncidentCopilot.Core.Entities.LogEvent", b =>
@@ -176,6 +237,17 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("ServiceMetrics");
                 });
 
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.KnowledgeDocumentChunk", b =>
+                {
+                    b.HasOne("IncidentCopilot.Core.Entities.KnowledgeDocument", "Document")
+                        .WithMany("Chunks")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+                });
+
             modelBuilder.Entity("IncidentCopilot.Core.Entities.LogEvent", b =>
                 {
                     b.HasOne("IncidentCopilot.Core.Entities.MonitoredService", "Service")
@@ -196,6 +268,11 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.KnowledgeDocument", b =>
+                {
+                    b.Navigation("Chunks");
                 });
 
             modelBuilder.Entity("IncidentCopilot.Core.Entities.MonitoredService", b =>

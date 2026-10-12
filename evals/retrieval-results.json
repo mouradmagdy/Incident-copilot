@@ -1,0 +1,730 @@
+{
+  "summary": {
+    "topK": 5,
+    "maxRelevantDistance": 0.75,
+    "relevantCases": 25,
+    "irrelevantCases": 5,
+    "recallAt1": 0.88,
+    "recallAt3": 0.96,
+    "recallAt5": 1.0,
+    "mrr": 0.9279999999999999,
+    "irrelevantRejectionAccuracy": 1.0,
+    "relevantNearestDistance": {
+      "min": 0.2474177627216423,
+      "max": 0.5537158314842945,
+      "avg": 0.435393973465359
+    },
+    "irrelevantNearestDistance": {
+      "min": 0.8828078955411911,
+      "max": 0.9615846261927707,
+      "avg": 0.9324672634554162
+    }
+  },
+  "results": [
+    {
+      "id": "db-1",
+      "question": "What are signs that a service has run out of available database connections?",
+      "expectedDocument": "database-connection-exhaustion.md",
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "downstream-service-failure.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.2474177627216423,
+        0.31239894776331756,
+        0.38260311328796537,
+        0.42022183838812066,
+        0.46736207409870967
+      ],
+      "bestDistance": 0.2474177627216423,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "db-2",
+      "question": "Requests are waiting because no database connections are available. What should I investigate?",
+      "expectedDocument": "database-connection-exhaustion.md",
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "downstream-service-failure.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.46792569947685503,
+        0.4721360363919703,
+        0.5163667500019039,
+        0.5991952895878296,
+        0.6097562196778081
+      ],
+      "bestDistance": 0.46792569947685503,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "db-3",
+      "question": "API latency is high, database timeouts are increasing, but CPU looks normal. What could explain that?",
+      "expectedDocument": "database-connection-exhaustion.md",
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "queue-backlog.md",
+        "database-connection-exhaustion.md",
+        "downstream-service-failure.md",
+        "queue-backlog.md"
+      ],
+      "distances": [
+        0.43289216062747726,
+        0.5178057242747701,
+        0.5963818728923769,
+        0.5987871169682433,
+        0.6181680419244716
+      ],
+      "bestDistance": 0.43289216062747726,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "db-4",
+      "question": "How should I verify that database connection pool pressure has recovered?",
+      "expectedDocument": "database-connection-exhaustion.md",
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.4032075049404792,
+        0.40428239741466,
+        0.41310851730209797,
+        0.43288574112739253,
+        0.43500277012603006
+      ],
+      "bestDistance": 0.4032075049404792,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "db-5",
+      "question": "Should I immediately increase the database pool size when connections are saturated?",
+      "expectedDocument": "database-connection-exhaustion.md",
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.412146210670467,
+        0.4424212311255188,
+        0.44708718517162627,
+        0.48430129979244974,
+        0.5808409625542403
+      ],
+      "bestDistance": 0.412146210670467,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "queue-1",
+      "question": "What queue depth is considered critical?",
+      "expectedDocument": "queue-backlog.md",
+      "retrievedDocuments": [
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "queue-backlog.md"
+      ],
+      "distances": [
+        0.4749295085584522,
+        0.5214508940086549,
+        0.6040717785443989,
+        0.6099036830491453,
+        0.6175086980315612
+      ],
+      "bestDistance": 0.4749295085584522,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "queue-2",
+      "question": "Workers cannot keep up with incoming jobs. What should I investigate?",
+      "expectedDocument": "queue-backlog.md",
+      "retrievedDocuments": [
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.5015508233576513,
+        0.5333815813064575,
+        0.5443490905865753,
+        0.5473294258117676,
+        0.6194912791252136
+      ],
+      "bestDistance": 0.5015508233576513,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "queue-3",
+      "question": "The processing queue keeps growing while requests continue arriving normally. What might be happening?",
+      "expectedDocument": "queue-backlog.md",
+      "retrievedDocuments": [
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.3164720331571109,
+        0.45396920764262727,
+        0.4599489134565298,
+        0.5288992839395573,
+        0.5393640445904777
+      ],
+      "bestDistance": 0.3164720331571109,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "queue-4",
+      "question": "How do I confirm that a queue backlog incident has recovered?",
+      "expectedDocument": "queue-backlog.md",
+      "retrievedDocuments": [
+        "incident-response.md",
+        "queue-backlog.md",
+        "incident-response.md",
+        "queue-backlog.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.4852414420390979,
+        0.5066661393641951,
+        0.5092831850051844,
+        0.518095344305035,
+        0.5232327296276519
+      ],
+      "bestDistance": 0.4852414420390979,
+      "rank": 2,
+      "hitAt1": false,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "queue-5",
+      "question": "What are common causes of an asynchronous worker falling behind?",
+      "expectedDocument": "queue-backlog.md",
+      "retrievedDocuments": [
+        "queue-backlog.md",
+        "queue-backlog.md",
+        "downstream-service-failure.md",
+        "queue-backlog.md",
+        "queue-backlog.md"
+      ],
+      "distances": [
+        0.4640241701610137,
+        0.5239097476005554,
+        0.5447510669902903,
+        0.5926174764265126,
+        0.6418038010597229
+      ],
+      "bestDistance": 0.4640241701610137,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "incident-1",
+      "question": "What should engineers do immediately after discovering a production incident?",
+      "expectedDocument": "incident-response.md",
+      "retrievedDocuments": [
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "queue-backlog.md"
+      ],
+      "distances": [
+        0.4330887794494629,
+        0.43531620502471924,
+        0.5982249618634596,
+        0.6201632022857666,
+        0.6272240579128265
+      ],
+      "bestDistance": 0.4330887794494629,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "incident-2",
+      "question": "How should an engineer triage a production outage?",
+      "expectedDocument": "incident-response.md",
+      "retrievedDocuments": [
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "downstream-service-failure.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.4591421919805463,
+        0.4612236183517071,
+        0.48040448070777875,
+        0.49645303179183675,
+        0.5266020156920554
+      ],
+      "bestDistance": 0.4591421919805463,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "incident-3",
+      "question": "What information should be preserved while responding to an incident?",
+      "expectedDocument": "incident-response.md",
+      "retrievedDocuments": [
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "downstream-service-failure.md"
+      ],
+      "distances": [
+        0.40770930716776377,
+        0.447454879950421,
+        0.4501460030718386,
+        0.6109867940235236,
+        0.6851128654282854
+      ],
+      "bestDistance": 0.40770930716776377,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "incident-4",
+      "question": "When can a production incident be considered recovered and ready for closure?",
+      "expectedDocument": "incident-response.md",
+      "retrievedDocuments": [
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md",
+        "deployment-regression.md"
+      ],
+      "distances": [
+        0.4181591023111868,
+        0.4412881135940552,
+        0.5053992867469788,
+        0.5707703828811646,
+        0.5795124423794475
+      ],
+      "bestDistance": 0.4181591023111868,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "incident-5",
+      "question": "How should we prioritize mitigation versus finding the permanent root cause during an outage?",
+      "expectedDocument": "incident-response.md",
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "incident-response.md",
+        "downstream-service-failure.md",
+        "incident-response.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.48338638196546957,
+        0.5278950192897025,
+        0.5511404081159416,
+        0.5623889397862851,
+        0.571469170705401
+      ],
+      "bestDistance": 0.48338638196546957,
+      "rank": 2,
+      "hitAt1": false,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "deploy-1",
+      "question": "Latency increased immediately after a new release was deployed.",
+      "expectedDocument": "deployment-regression.md",
+      "retrievedDocuments": [
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "queue-backlog.md",
+        "database-connection-exhaustion.md",
+        "deployment-regression.md"
+      ],
+      "distances": [
+        0.541697312149165,
+        0.5710384590052633,
+        0.578119848854532,
+        0.5945895249774625,
+        0.6229860186576817
+      ],
+      "bestDistance": 0.541697312149165,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "deploy-2",
+      "question": "The service was healthy before version 2.4 went live and became slow right afterward. What should I check?",
+      "expectedDocument": "deployment-regression.md",
+      "retrievedDocuments": [
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "incident-response.md",
+        "queue-backlog.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.5079968415501503,
+        0.5450951376387223,
+        0.5530801022505569,
+        0.5581724241663644,
+        0.5608034955497359
+      ],
+      "bestDistance": 0.5079968415501503,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "deploy-3",
+      "question": "How can I determine whether a recent deployment caused a production performance regression?",
+      "expectedDocument": "deployment-regression.md",
+      "retrievedDocuments": [
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "queue-backlog.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.28754687309265137,
+        0.4493587345267087,
+        0.5033639521409257,
+        0.5805101048642327,
+        0.5815655935743798
+      ],
+      "bestDistance": 0.28754687309265137,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "deploy-4",
+      "question": "What is a sensible mitigation when a newly deployed version causes errors?",
+      "expectedDocument": "deployment-regression.md",
+      "retrievedDocuments": [
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "deployment-regression.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.37554921203265046,
+        0.41267422362123485,
+        0.4154326072077379,
+        0.4266206196957619,
+        0.5329876800790214
+      ],
+      "bestDistance": 0.37554921203265046,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "deploy-5",
+      "question": "The service CPU and latency jumped after rollout, but database pressure did not. What kind of incident should I suspect?",
+      "expectedDocument": "deployment-regression.md",
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "database-connection-exhaustion.md",
+        "incident-response.md",
+        "deployment-regression.md"
+      ],
+      "distances": [
+        0.44226452364113966,
+        0.4578337507794422,
+        0.4716010093688965,
+        0.49175381660461426,
+        0.5140469959946268
+      ],
+      "bestDistance": 0.44226452364113966,
+      "rank": 5,
+      "hitAt1": false,
+      "hitAt3": false,
+      "hitAt5": true
+    },
+    {
+      "id": "downstream-1",
+      "question": "Our service is receiving 503 responses from a dependency.",
+      "expectedDocument": "downstream-service-failure.md",
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "database-connection-exhaustion.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.511544705125373,
+        0.5150097481920938,
+        0.6026894213372117,
+        0.6299026387871878,
+        0.6431572437286351
+      ],
+      "bestDistance": 0.511544705125373,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "downstream-2",
+      "question": "A dependency is timing out and our own API errors are rising. What should I investigate?",
+      "expectedDocument": "downstream-service-failure.md",
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "deployment-regression.md",
+        "incident-response.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.46524260834581876,
+        0.4771652533313472,
+        0.5115737007172465,
+        0.567646793407584,
+        0.589325452487143
+      ],
+      "bestDistance": 0.46524260834581876,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "downstream-3",
+      "question": "How can a failure in another service cause our service to become slow or unhealthy?",
+      "expectedDocument": "downstream-service-failure.md",
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "incident-response.md",
+        "incident-response.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.3939333142657948,
+        0.5053449266737752,
+        0.5235497923433994,
+        0.5358171420315302,
+        0.5447061279941561
+      ],
+      "bestDistance": 0.3939333142657948,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "downstream-4",
+      "question": "How should I verify recovery after an external dependency starts responding normally again?",
+      "expectedDocument": "downstream-service-failure.md",
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "deployment-regression.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.5537158314842945,
+        0.6346956325432487,
+        0.6426654032069901,
+        0.6484870701126442,
+        0.6668279965910884
+      ],
+      "bestDistance": 0.5537158314842945,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "downstream-5",
+      "question": "Requests fail only when they call another internal service. What category of incident does that suggest?",
+      "expectedDocument": "downstream-service-failure.md",
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "downstream-service-failure.md",
+        "incident-response.md",
+        "downstream-service-failure.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.3980650363622614,
+        0.4996551275253296,
+        0.582319438457489,
+        0.5881600870895253,
+        0.5906787812709808
+      ],
+      "bestDistance": 0.3980650363622614,
+      "rank": 1,
+      "hitAt1": true,
+      "hitAt3": true,
+      "hitAt5": true
+    },
+    {
+      "id": "irrelevant-1",
+      "question": "How do I cook pasta?",
+      "expectedDocument": null,
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "queue-backlog.md",
+        "incident-response.md",
+        "incident-response.md",
+        "deployment-regression.md"
+      ],
+      "distances": [
+        0.9275252011388295,
+        0.932070791721344,
+        0.9466005004942417,
+        0.9477382600307465,
+        0.9687236547470093
+      ],
+      "bestDistance": 0.9275252011388295,
+      "correctlyRejected": true
+    },
+    {
+      "id": "irrelevant-2",
+      "question": "Who won the football World Cup?",
+      "expectedDocument": null,
+      "retrievedDocuments": [
+        "incident-response.md",
+        "downstream-service-failure.md",
+        "database-connection-exhaustion.md",
+        "downstream-service-failure.md",
+        "database-connection-exhaustion.md"
+      ],
+      "distances": [
+        0.9615846261927707,
+        0.9722384562065978,
+        0.9895131771121375,
+        0.9919419703220147,
+        0.9944851066479024
+      ],
+      "bestDistance": 0.9615846261927707,
+      "correctlyRejected": true
+    },
+    {
+      "id": "irrelevant-3",
+      "question": "What is the capital of Japan?",
+      "expectedDocument": null,
+      "retrievedDocuments": [
+        "database-connection-exhaustion.md",
+        "deployment-regression.md",
+        "database-connection-exhaustion.md",
+        "deployment-regression.md",
+        "deployment-regression.md"
+      ],
+      "distances": [
+        0.9483185646913724,
+        0.9542530775070187,
+        0.9614483802883851,
+        0.9816020002903343,
+        0.9842998152553925
+      ],
+      "bestDistance": 0.9483185646913724,
+      "correctlyRejected": true
+    },
+    {
+      "id": "irrelevant-4",
+      "question": "How should I water a house plant?",
+      "expectedDocument": null,
+      "retrievedDocuments": [
+        "downstream-service-failure.md",
+        "incident-response.md",
+        "queue-backlog.md",
+        "database-connection-exhaustion.md",
+        "incident-response.md"
+      ],
+      "distances": [
+        0.8828078955411911,
+        0.9310752972960472,
+        0.9434112533926964,
+        0.9515203759074211,
+        0.9521504268050194
+      ],
+      "bestDistance": 0.8828078955411911,
+      "correctlyRejected": true
+    },
+    {
+      "id": "irrelevant-5",
+      "question": "Explain how to make scrambled eggs.",
+      "expectedDocument": null,
+      "retrievedDocuments": [
+        "incident-response.md",
+        "incident-response.md",
+        "downstream-service-failure.md",
+        "queue-backlog.md",
+        "queue-backlog.md"
+      ],
+      "distances": [
+        0.9421000297129171,
+        0.9503206953597483,
+        0.9743096489870753,
+        0.9965724812640239,
+        0.9979753511078969
+      ],
+      "bestDistance": 0.9421000297129171,
+      "correctlyRejected": true
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "db-1",
+    "question": "What are signs that a service has run out of available database connections?",
+    "expectedDocument": "database-connection-exhaustion.md"
+  },
+  {
+    "id": "db-2",
+    "question": "Requests are waiting because no database connections are available. What should I investigate?",
+    "expectedDocument": "database-connection-exhaustion.md"
+  },
+  {
+    "id": "db-3",
+    "question": "API latency is high, database timeouts are increasing, but CPU looks normal. What could explain that?",
+    "expectedDocument": "database-connection-exhaustion.md"
+  },
+  {
+    "id": "db-4",
+    "question": "How should I verify that database connection pool pressure has recovered?",
+    "expectedDocument": "database-connection-exhaustion.md"
+  },
+  {
+    "id": "db-5",
+    "question": "Should I immediately increase the database pool size when connections are saturated?",
+    "expectedDocument": "database-connection-exhaustion.md"
+  },
+  {
+    "id": "queue-1",
+    "question": "What queue depth is considered critical?",
+    "expectedDocument": "queue-backlog.md"
+  },
+  {
+    "id": "queue-2",
+    "question": "Workers cannot keep up with incoming jobs. What should I investigate?",
+    "expectedDocument": "queue-backlog.md"
+  },
+  {
+    "id": "queue-3",
+    "question": "The processing queue keeps growing while requests continue arriving normally. What might be happening?",
+    "expectedDocument": "queue-backlog.md"
+  },
+  {
+    "id": "queue-4",
+    "question": "How do I confirm that a queue backlog incident has recovered?",
+    "expectedDocument": "queue-backlog.md"
+  },
+  {
+    "id": "queue-5",
+    "question": "What are common causes of an asynchronous worker falling behind?",
+    "expectedDocument": "queue-backlog.md"
+  },
+  {
+    "id": "incident-1",
+    "question": "What should engineers do immediately after discovering a production incident?",
+    "expectedDocument": "incident-response.md"
+  },
+  {
+    "id": "incident-2",
+    "question": "How should an engineer triage a production outage?",
+    "expectedDocument": "incident-response.md"
+  },
+  {
+    "id": "incident-3",
+    "question": "What information should be preserved while responding to an incident?",
+    "expectedDocument": "incident-response.md"
+  },
+  {
+    "id": "incident-4",
+    "question": "When can a production incident be considered recovered and ready for closure?",
+    "expectedDocument": "incident-response.md"
+  },
+  {
+    "id": "incident-5",
+    "question": "How should we prioritize mitigation versus finding the permanent root cause during an outage?",
+    "expectedDocument": "incident-response.md"
+  },
+  {
+    "id": "deploy-1",
+    "question": "Latency increased immediately after a new release was deployed.",
+    "expectedDocument": "deployment-regression.md"
+  },
+  {
+    "id": "deploy-2",
+    "question": "The service was healthy before version 2.4 went live and became slow right afterward. What should I check?",
+    "expectedDocument": "deployment-regression.md"
+  },
+  {
+    "id": "deploy-3",
+    "question": "How can I determine whether a recent deployment caused a production performance regression?",
+    "expectedDocument": "deployment-regression.md"
+  },
+  {
+    "id": "deploy-4",
+    "question": "What is a sensible mitigation when a newly deployed version causes errors?",
+    "expectedDocument": "deployment-regression.md"
+  },
+  {
+    "id": "deploy-5",
+    "question": "The service CPU and latency jumped after rollout, but database pressure did not. What kind of incident should I suspect?",
+    "expectedDocument": "deployment-regression.md"
+  },
+  {
+    "id": "downstream-1",
+    "question": "Our service is receiving 503 responses from a dependency.",
+    "expectedDocument": "downstream-service-failure.md"
+  },
+  {
+    "id": "downstream-2",
+    "question": "A dependency is timing out and our own API errors are rising. What should I investigate?",
+    "expectedDocument": "downstream-service-failure.md"
+  },
+  {
+    "id": "downstream-3",
+    "question": "How can a failure in another service cause our service to become slow or unhealthy?",
+    "expectedDocument": "downstream-service-failure.md"
+  },
+  {
+    "id": "downstream-4",
+    "question": "How should I verify recovery after an external dependency starts responding normally again?",
+    "expectedDocument": "downstream-service-failure.md"
+  },
+  {
+    "id": "downstream-5",
+    "question": "Requests fail only when they call another internal service. What category of incident does that suggest?",
+    "expectedDocument": "downstream-service-failure.md"
+  },
+  {
+    "id": "irrelevant-1",
+    "question": "How do I cook pasta?",
+    "expectedDocument": null
+  },
+  {
+    "id": "irrelevant-2",
+    "question": "Who won the football World Cup?",
+    "expectedDocument": null
+  },
+  {
+    "id": "irrelevant-3",
+    "question": "What is the capital of Japan?",
+    "expectedDocument": null
+  },
+  {
+    "id": "irrelevant-4",
+    "question": "How should I water a house plant?",
+    "expectedDocument": null
+  },
+  {
+    "id": "irrelevant-5",
+    "question": "Explain how to make scrambled eggs.",
+    "expectedDocument": null
+  }
+]

@@ -5,12 +5,12 @@ import { MetricCard } from './metric-card'
 
 export function SummaryGrid({ serviceCount, summary }: { serviceCount: number; summary: DashboardSummary }) {
   return (
-    <section className="summary-grid" aria-label="System summary">
+    <section className="grid grid-cols-4 gap-2.5 max-[940px]:grid-cols-2 max-[500px]:grid-cols-1" aria-label="System summary">
       <MetricCard
         label="Services"
         value={formatNumber(serviceCount)}
         icon={<Server size={18} />}
-        hint={<><i className="hint-dot hint-dot--healthy" />{serviceCount - summary.degradedCount} healthy <i className="hint-dot hint-dot--warning" />{summary.degradedCount} degraded</>}
+        hint={<><i className="size-[7px] rounded-full bg-success first:ml-0" />{serviceCount - summary.degradedCount} healthy <i className="ml-[3px] size-[7px] rounded-full bg-warning first:ml-0" />{summary.degradedCount} degraded</>}
       />
       <MetricCard label="Request Rate" value={`${formatNumber(summary.requestRate)} /s`} icon={<Activity size={18} />} hint="Across monitored services" />
       <MetricCard label="Error Rate" value={`${formatNumber(summary.errorRate, 1)}%`} icon={<ShieldAlert size={18} />} hint="Average latest sample" tone="red" />

@@ -1,17 +1,30 @@
 [
   {
-    "id": "current-latency",
-    "question": "What is OrderService's current p95 latency?",
-    "requiresLiveData": true
+    "id": "critical-queue-depth",
+    "question": "What queue depth is considered critical?",
+    "expectedDocument": "queue-backlog.md",
+    "expectedAnswerContains": "500"
   },
   {
-    "id": "current-root-cause",
-    "question": "Why is OrderService currently slow?",
-    "requiresLiveData": true
+    "id": "db-exhaustion-symptoms",
+    "question": "What are symptoms of database connection exhaustion?",
+    "expectedDocument": "database-connection-exhaustion.md"
   },
   {
-    "id": "connection-pooling",
-    "question": "What is database connection pooling?",
-    "requiresLiveData": false
+    "id": "incident-response",
+    "question": "What should engineers do first during a production incident?",
+    "expectedDocument": "incident-response.md"
+  },
+  {
+    "id": "live-db-connections",
+    "question": "How many active DB connections does OrderService currently have?",
+    "requiresLiveData": true,
+    "shouldRefuseToGuess": true
+  },
+  {
+    "id": "out-of-domain",
+    "question": "How do I cook pasta?",
+    "expectedDocument": null,
+    "outOfScope": true
   }
 ]

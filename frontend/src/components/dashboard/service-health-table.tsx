@@ -10,19 +10,20 @@ import type { ServiceHealthRow } from '../../types/dashboard'
 import { formatNumber } from '../../utils/formatters'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { Card, CardHeader } from '../ui/card'
+import { Card } from '../ui/card'
+import { CardHeader } from '../ui/card-header'
 
 export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
   const columns = useMemo<ColumnDef<ServiceHealthRow>[]>(() => [
     {
       header: 'Service',
-      cell: ({ row }) => <strong className="service-name">{row.original.service.name}</strong>,
+      cell: ({ row }) => <strong className="font-medium text-text-strong">{row.original.service.name}</strong>,
     },
     {
       header: 'Status',
       cell: ({ row }) => (
-        <Badge className={row.original.degraded ? 'status-badge status-badge--danger' : 'status-badge'}>
-          <span className="status-dot" />
+        <Badge className={row.original.degraded ? 'text-danger' : 'text-success'}>
+          <span className="size-[7px] rounded-full bg-current" />
           {row.original.metric
             ? row.original.degraded ? 'Degraded' : 'Healthy'
             : 'Waiting'}
@@ -38,7 +39,7 @@ export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
     {
       header: 'Error rate',
       cell: ({ row }) => row.original.metric
-        ? <span className={row.original.degraded ? 'danger-text' : ''}>
+        ? <span className={row.original.degraded ? 'text-danger' : ''}>
             {formatNumber(row.original.metric.errorRatePercent, 1)}%
           </span>
         : '—',
@@ -57,7 +58,7 @@ export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
     },
     {
       id: 'actions',
-      cell: () => <MoreHorizontal size={15} className="table-more" />,
+      cell: () => <MoreHorizontal size={15} className="text-muted" />,
     },
   ], [])
 
@@ -68,13 +69,13 @@ export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
   })
 
   return (
-    <Card className="table-card">
+    <Card className="min-w-0">
       <CardHeader>
         <strong>Service Health</strong>
         <Button variant="outline" size="sm" type="button">View all services</Button>
       </CardHeader>
-      <div className="table-scroll">
-        <table className="health-table">
+      <div className="overflow-x-auto px-3 pb-[9px]">
+        <table className="w-full border-collapse text-left text-[9px] whitespace-nowrap [&_td]:border-t [&_td]:border-border-subtle [&_td]:px-[7px] [&_td]:py-2 [&_td]:text-text [&_th]:px-[7px] [&_th]:py-1.5 [&_th]:font-medium [&_th]:text-muted">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>

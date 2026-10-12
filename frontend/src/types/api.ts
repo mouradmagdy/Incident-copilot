@@ -40,4 +40,11 @@ export interface SimulationScenarioResponse {
 
 export interface ChatResponse {
   content: string
+  sources: ChatSource[]
+}
+
+export interface ChatSource {
+  chunkId: number
+  fileName: string
+  section: string | null
 }

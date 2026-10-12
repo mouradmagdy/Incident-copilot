@@ -18,11 +18,11 @@ export function OverviewPage() {
   const isRefreshing = metricsQuery.isFetching || logsQuery.isFetching
 
   return (
-    <div className="overview">
+    <div className="min-w-0 px-[18px] pt-3.5 pb-7 max-[720px]:px-3 max-[720px]:pt-[15px] max-[720px]:pb-6">
       <DashboardHeader isRefreshing={isRefreshing} onRefresh={refresh} />
 
       {hasError && (
-        <div className="error-banner" role="alert">
+        <div className="mb-2.5 rounded-[7px] border border-danger/35 bg-danger-soft px-[11px] py-[9px] text-[10px] text-danger" role="alert">
           The dashboard could not reach the API. Confirm it is running on port 5087.
         </div>
       )}
@@ -37,12 +37,12 @@ export function OverviewPage() {
 
       <SummaryGrid serviceCount={services.length} summary={summary} />
 
-      <section className="charts-grid" aria-label="Telemetry trends">
+      <section className="mt-2.5 grid grid-cols-2 gap-2.5 max-[940px]:grid-cols-1" aria-label="Telemetry trends">
         <TelemetryChart title="Request Rate" dataKey="requestRate" data={telemetrySeries} color="blue" />
         <TelemetryChart title="Error Rate (%)" dataKey="errorRate" data={telemetrySeries} color="red" />
       </section>
 
-      <section className="operations-grid">
+      <section className="mt-2.5 grid grid-cols-[minmax(0,1.8fr)_minmax(230px,.9fr)] gap-2.5 max-[940px]:grid-cols-1">
         <ServiceHealthTable rows={serviceRows} />
         <RecentIncidents />
       </section>

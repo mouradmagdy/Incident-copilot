@@ -1,28 +1,44 @@
-import { LogOut } from 'lucide-react'
+import { LogOut, PanelLeftOpen } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import { useSidebar } from '../../hooks/ui/use-sidebar'
 import { navigationItems } from '../../router/navigation'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenuButton,
-  SidebarTrigger,
-} from '../ui/sidebar'
+import { Sidebar } from '../ui/sidebar'
+import { SidebarContent } from '../ui/sidebar-content'
+import { SidebarFooter } from '../ui/sidebar-footer'
+import { SidebarHeader } from '../ui/sidebar-header'
+import { SidebarMenuButton } from '../ui/sidebar-menu-button'
+import { SidebarTrigger } from '../ui/sidebar-trigger'
 
 export function AppSidebar() {
+  const { open, toggle } = useSidebar()
+
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="brand-lockup">
-          <span className="brand-logo">IC</span>
-          <strong className="sidebar-label">Incident Copilot</strong>
-        </div>
+        {open ? (
+          <div className="flex h-[34px] items-center gap-2 overflow-hidden px-[5px] text-sm whitespace-nowrap text-text-strong">
+            <span className="grid size-[23px] shrink-0 place-items-center rounded-[5px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white">IC</span>
+            <strong className="max-w-[150px] overflow-hidden whitespace-nowrap opacity-100 transition-[max-width,opacity] duration-200">Incident Copilot</strong>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="group/logo flex h-[34px] w-full cursor-pointer items-center justify-center overflow-hidden border-0 bg-transparent px-[5px] text-sm whitespace-nowrap text-text-strong"
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+            onClick={toggle}
+          >
+            <span className="relative grid size-[23px] shrink-0 place-items-center rounded-[5px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white">
+              <span className="col-start-1 row-start-1 transition duration-150 group-hover/logo:scale-80 group-hover/logo:opacity-0 group-focus-visible/logo:scale-80 group-focus-visible/logo:opacity-0">IC</span>
+              <PanelLeftOpen className="col-start-1 row-start-1 scale-80 opacity-0 transition duration-150 group-hover/logo:scale-100 group-hover/logo:opacity-100 group-focus-visible/logo:scale-100 group-focus-visible/logo:opacity-100" size={15} />
+            </span>
+          </button>
+        )}
         <SidebarTrigger />
       </SidebarHeader>
 
       <SidebarContent>
-        <nav className="sidebar-nav" aria-label="Primary navigation">
+        <nav className="mt-[17px] flex flex-col gap-[3px] max-[720px]:mt-[7px] max-[720px]:flex-row max-[720px]:overflow-x-auto" aria-label="Primary navigation">
           {navigationItems.map(({ label, path, icon: Icon }) => (
             <SidebarMenuButton key={path} asChild>
               <NavLink
@@ -30,8 +46,8 @@ export function AppSidebar() {
                 end={path === '/'}
                 title={label}
               >
-                <Icon size={15} />
-                <span className="sidebar-label">{label}</span>
+                <Icon className="shrink-0" size={15} />
+                <span className="max-w-[150px] overflow-hidden whitespace-nowrap opacity-100 transition-[max-width,opacity] duration-200 group-data-[sidebar-state=collapsed]/sidebar:max-w-0 group-data-[sidebar-state=collapsed]/sidebar:opacity-0 group-data-[sidebar-state=collapsed]/sidebar:pointer-events-none">{label}</span>
               </NavLink>
             </SidebarMenuButton>
           ))}
@@ -39,16 +55,16 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="user-summary">
-          <span className="user-avatar">JD</span>
-          <div className="sidebar-label">
-            <strong>Jordan Davis</strong>
-            <span>Engineer</span>
+        <div className="flex min-w-0 items-center gap-2 p-[5px] group-data-[sidebar-state=collapsed]/sidebar:justify-center group-data-[sidebar-state=collapsed]/sidebar:gap-0 group-data-[sidebar-state=collapsed]/sidebar:px-0">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#44516a] text-[9px] font-bold text-white">JD</span>
+          <div className="flex min-h-7 max-w-[150px] flex-col justify-center overflow-hidden whitespace-nowrap opacity-100 transition-[max-width,opacity] duration-200 group-data-[sidebar-state=collapsed]/sidebar:max-w-0 group-data-[sidebar-state=collapsed]/sidebar:opacity-0 group-data-[sidebar-state=collapsed]/sidebar:pointer-events-none">
+            <strong className="block overflow-hidden text-[9px] text-ellipsis whitespace-nowrap text-text-strong">Jordan Davis</strong>
+            <span className="mt-0.5 block text-[8px] text-muted">Engineer</span>
           </div>
         </div>
-        <button className="logout-button" type="button" title="Log out (not connected yet)">
-          <LogOut size={15} />
-          <span className="sidebar-label">Log out</span>
+        <button className="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent p-[7px] text-[9px] text-muted hover:bg-danger-soft hover:text-danger group-data-[sidebar-state=collapsed]/sidebar:justify-center group-data-[sidebar-state=collapsed]/sidebar:gap-0 group-data-[sidebar-state=collapsed]/sidebar:px-0" type="button" title="Log out (not connected yet)">
+          <LogOut className="shrink-0" size={15} />
+          <span className="max-w-[150px] overflow-hidden whitespace-nowrap opacity-100 transition-[max-width,opacity] duration-200 group-data-[sidebar-state=collapsed]/sidebar:max-w-0 group-data-[sidebar-state=collapsed]/sidebar:opacity-0 group-data-[sidebar-state=collapsed]/sidebar:pointer-events-none">Log out</span>
         </button>
       </SidebarFooter>
     </Sidebar>

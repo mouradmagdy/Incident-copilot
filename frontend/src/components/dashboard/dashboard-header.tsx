@@ -1,5 +1,6 @@
 import { Bot, Moon, RefreshCw, Sun } from 'lucide-react'
 import { useUiStore, type TimeRange } from '../../stores/ui-store'
+import { cn } from '../../utils/classnames'
 import { Button } from '../ui/button'
 
 const timeRanges: Array<{ value: TimeRange; label: string }> = [
@@ -26,19 +27,22 @@ export function DashboardHeader({
   } = useUiStore()
 
   return (
-    <header className="overview-header">
+    <header className="mb-3 flex min-h-11 items-center justify-between gap-5 max-[940px]:flex-col max-[940px]:items-start">
       <div>
-        <h1>System Overview</h1>
-        <p>Monitor the health and performance of your services in real time.</p>
+        <h1 className="mb-[3px] text-xl leading-[1.1] tracking-[-.025em] text-text-strong">System Overview</h1>
+        <p className="text-[11px] text-muted">Monitor the health and performance of your services in real time.</p>
       </div>
 
-      <div className="header-actions">
-        <div className="time-range" aria-label="Telemetry time range">
+      <div className="flex items-center gap-[7px] max-[940px]:w-full max-[500px]:flex-wrap">
+        <div className="inline-flex rounded-[7px] border border-border bg-surface p-[3px] max-[940px]:flex-1 max-[940px]:overflow-x-auto" aria-label="Telemetry time range">
           {timeRanges.map((range) => (
             <button
               key={range.value}
               type="button"
-              className={timeRange === range.value ? 'active' : ''}
+              className={cn(
+                'cursor-pointer rounded-[5px] border-0 bg-transparent px-[9px] py-1.5 text-[9px] text-muted',
+                timeRange === range.value && 'bg-primary-soft font-semibold text-primary-text',
+              )}
               onClick={() => setTimeRange(range.value)}
             >
               {range.label}
@@ -46,7 +50,7 @@ export function DashboardHeader({
           ))}
         </div>
         <Button variant="outline" size="icon" type="button" aria-label="Refresh telemetry" onClick={onRefresh}>
-          <RefreshCw size={15} className={isRefreshing ? 'spin' : ''} />
+          <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
         </Button>
         <Button
           variant="ghost"

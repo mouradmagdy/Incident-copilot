@@ -9,7 +9,9 @@ import {
 } from 'recharts'
 import type { TelemetryPoint } from '../../utils/telemetry'
 import { Button } from '../ui/button'
-import { Card, CardContent, CardHeader } from '../ui/card'
+import { Card } from '../ui/card'
+import { CardContent } from '../ui/card-content'
+import { CardHeader } from '../ui/card-header'
 import { ChevronDown } from 'lucide-react'
 
 export function TelemetryChart({
@@ -27,7 +29,7 @@ export function TelemetryChart({
   const gradientId = `gradient-${dataKey}`
 
   return (
-    <Card className="chart-card">
+    <Card className="min-w-0">
       <CardHeader>
         <strong>{title}</strong>
         <Button variant="outline" size="sm" type="button">
@@ -35,9 +37,9 @@ export function TelemetryChart({
           <ChevronDown size={12} />
         </Button>
       </CardHeader>
-      <CardContent className="chart-content">
+      <CardContent className="h-[150px] px-2 pb-2">
         {data.length === 0 ? (
-          <div className="panel-empty">Waiting for telemetry samples</div>
+          <div className="grid h-full min-h-[76px] place-items-center text-center text-[10px] text-muted">Waiting for telemetry samples</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -20 }}>

@@ -1,11 +1,13 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { chatApi } from '../../services/chat-api'
+import type { ChatSource } from '../../types/api'
 
 export interface ChatMessage {
   id: number
   role: 'user' | 'assistant'
   content: string
+  sources?: ChatSource[]
 }
 
 let nextMessageId = 1
@@ -18,7 +20,12 @@ export function useChat() {
     onSuccess: (response) => {
       setMessages((current) => [
         ...current,
-        { id: nextMessageId++, role: 'assistant', content: response.content },
+        {
+          id: nextMessageId++,
+          role: 'assistant',
+          content: response.content,
+          sources: response.sources ?? [],
+        },
       ])
     },
   })

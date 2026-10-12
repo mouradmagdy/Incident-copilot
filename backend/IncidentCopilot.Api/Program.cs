@@ -44,6 +44,15 @@ builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
 builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services
+    .AddOptions<ChatDiagnosticsOptions>()
+    .Bind(builder.Configuration.GetSection(
+        ChatDiagnosticsOptions.SectionName))
+    .Validate(
+        options => options.ChunkContentLimit > 0,
+        "ChatDiagnostics:ChunkContentLimit must be greater than zero.")
+    .ValidateOnStart();
+
+builder.Services
     .AddOptions<KnowledgeOptions>()
     .Bind(builder.Configuration.GetSection(KnowledgeOptions.SectionName))
     .PostConfigure(options =>

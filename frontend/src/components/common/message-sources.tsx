@@ -1,10 +1,8 @@
 import { FileText } from 'lucide-react'
 import type { ChatSource } from '../../types/api'
-import { getUniqueSources } from '../../utils/chat-sources'
 
 export function MessageSources({ sources }: { sources?: ChatSource[] }) {
-  const uniqueSources = getUniqueSources(sources)
-  if (uniqueSources.length === 0) return null
+  if (!sources?.length) return null
 
   return (
     <section
@@ -13,7 +11,7 @@ export function MessageSources({ sources }: { sources?: ChatSource[] }) {
     >
       <strong className="mb-1 block text-[8px] font-semibold text-text">Sources</strong>
       <ul className="flex list-none flex-wrap gap-1 p-0">
-        {uniqueSources.map((source) => (
+        {sources.map((source) => (
           <li
             className="inline-flex min-w-0 max-w-full items-center gap-[3px] rounded-sm bg-surface-muted px-[5px] py-[3px]"
             key={`${source.fileName}-${source.section ?? ''}`}

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\IncidentCopilot.Application\IncidentCopilot.Application.csproj" />
     <ProjectReference Include="..\IncidentCopilot.Core\IncidentCopilot.Core.csproj" />
   </ItemGroup>
 

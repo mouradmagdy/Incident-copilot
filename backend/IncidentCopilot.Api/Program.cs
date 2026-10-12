@@ -39,6 +39,24 @@ builder.Services
 
 builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
+builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
+
+builder.Services
+    .AddOptions<KnowledgeOptions>()
+    .Bind(builder.Configuration.GetSection(KnowledgeOptions.SectionName))
+    .PostConfigure(options =>
+    {
+        if (!Path.IsPathRooted(options.RunbooksPath))
+        {
+            options.RunbooksPath = Path.GetFullPath(
+                options.RunbooksPath,
+                builder.Environment.ContentRootPath);
+        }
+    })
+    .Validate(
+        options => !string.IsNullOrWhiteSpace(options.RunbooksPath),
+        "Knowledge:RunbooksPath must be configured.")
+    .ValidateOnStart();
 
 builder.Services
     .AddOptions<EmbeddingServiceOptions>()
@@ -71,6 +89,10 @@ builder.Services.AddDbContext<IncidentCopilotDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsqlOptions => npgsqlOptions.UseVector()));
+
+builder.Services.AddScoped<
+    IKnowledgeDocumentRepository,
+    KnowledgeDocumentRepository>();
 
 
 if (builder.Environment.IsDevelopment())

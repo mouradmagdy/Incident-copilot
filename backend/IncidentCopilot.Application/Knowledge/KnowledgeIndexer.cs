@@ -24,8 +24,16 @@ public sealed class KnowledgeIndexer : IKnowledgeIndexer
         _options = options.Value;
     }
 
-    public async Task IndexAllAsync(CancellationToken cancellationToken = default)
+    public async Task IndexAllAsync(
+        int? targetChunkSize = null,
+        int? chunkOverlap = null,
+        CancellationToken cancellationToken = default)
     {
+        var effectiveTargetChunkSize = targetChunkSize
+            ?? _options.TargetChunkSize;
+        var effectiveChunkOverlap = chunkOverlap
+            ?? _options.ChunkOverlap;
+
         if (!Directory.Exists(_options.RunbooksPath))
         {
             throw new DirectoryNotFoundException(
@@ -42,7 +50,10 @@ public sealed class KnowledgeIndexer : IKnowledgeIndexer
         foreach (var file in files)
         {
             var markdown = await File.ReadAllTextAsync(file, cancellationToken);
-            var chunks = _chunker.Chunk(markdown);
+            var chunks = _chunker.Chunk(
+                markdown,
+                effectiveTargetChunkSize,
+                effectiveChunkOverlap);
 
             if (chunks.Count == 0)
             {

@@ -20,9 +20,26 @@ public sealed class KnowledgeController : ControllerBase
 
     [HttpPost("reindex")]
     public async Task<IActionResult> Reindex(
-        CancellationToken cancellationToken)
+        [FromQuery] int? targetChunkSize = null,
+        [FromQuery] int? chunkOverlap = null,
+        CancellationToken cancellationToken = default)
     {
-        await _indexer.IndexAllAsync(cancellationToken);
+        if ((targetChunkSize.HasValue || chunkOverlap.HasValue)
+            && (!targetChunkSize.HasValue
+                || !chunkOverlap.HasValue
+                || targetChunkSize <= 0
+                || chunkOverlap < 0
+                || chunkOverlap >= targetChunkSize))
+        {
+            return BadRequest(
+                "Provide a positive targetChunkSize and a chunkOverlap " +
+                "between zero and targetChunkSize - 1.");
+        }
+
+        await _indexer.IndexAllAsync(
+            targetChunkSize,
+            chunkOverlap,
+            cancellationToken);
 
         return NoContent();
     }

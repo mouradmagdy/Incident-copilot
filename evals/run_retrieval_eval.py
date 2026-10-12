@@ -1,391 +1,248 @@
+import argparse
 import json
 from pathlib import Path
 
 import requests
 
 
-# -----------------------------
-# Configuration
-# -----------------------------
-
-BASE_URL = "http://localhost:5087"
-SEARCH_URL = f"{BASE_URL}/api/knowledge/search"
-
-TOP_K = 5
-
-# Initial experimental threshold.
-# Do not treat this as final; use the printed distance distributions
-# to decide whether it should change.
-MAX_RELEVANT_DISTANCE = 0.75
-
 HERE = Path(__file__).resolve().parent
-DATASET_PATH = HERE / "retrieval.json"
-RESULTS_PATH = HERE / "retrieval-results.json"
 
 
-# -----------------------------
-# Helpers
-# -----------------------------
-
-def hit_at_k(retrieved_documents, expected_document, k):
-    """True when the expected document appears in the first k returned chunks."""
-    return expected_document in retrieved_documents[:k]
-
-
-def first_rank(retrieved_documents, expected_document):
-    """
-    Return the 1-based rank of the first chunk from expected_document.
-    Return None when it was not retrieved.
-    """
+def parse_chunking(value):
     try:
-        return retrieved_documents.index(expected_document) + 1
-    except ValueError:
-        return None
+        target_size, overlap = (int(part) for part in value.split(":", 1))
+    except (TypeError, ValueError) as error:
+        raise argparse.ArgumentTypeError(
+            "chunking must use TARGET:OVERLAP, for example 400:50"
+        ) from error
+
+    if target_size <= 0 or overlap < 0 or overlap >= target_size:
+        raise argparse.ArgumentTypeError(
+            "target must be positive and overlap must be between 0 and target - 1"
+        )
+
+    return target_size, overlap
 
 
-def search(question, top_k):
-    response = requests.get(
-        SEARCH_URL,
-        params={
-            "query": question,
-            "topK": top_k,
-        },
-        timeout=30,
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Evaluate retrieval, optionally reindexing multiple chunk configurations."
     )
-    response.raise_for_status()
-    return response.json()
+    parser.add_argument("--base-url", default="http://localhost:5087")
+    parser.add_argument("--dataset", type=Path, default=HERE / "retrieval.json")
+    parser.add_argument("--output-dir", type=Path, default=HERE)
+    parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument("--max-distance", type=float, default=0.75)
+    parser.add_argument(
+        "--chunking",
+        action="append",
+        type=parse_chunking,
+        metavar="TARGET:OVERLAP",
+        help=(
+            "Reindex and evaluate this configuration. Repeat to compare several "
+            "configurations. With no value, evaluate the existing index."
+        ),
+    )
+    args = parser.parse_args()
 
+    if args.top_k <= 0:
+        parser.error("--top-k must be greater than zero")
 
-# -----------------------------
-# Load eval cases
-# -----------------------------
-
-with DATASET_PATH.open("r", encoding="utf-8") as f:
-    cases = json.load(f)
-
-
-results = []
-
-print(f"Running {len(cases)} retrieval eval cases...")
-print(f"Endpoint: {SEARCH_URL}")
-print(f"Top K: {TOP_K}")
-print()
-
-
-# -----------------------------
-# Run retrieval
-# -----------------------------
-
-for index, case in enumerate(cases, start=1):
-    chunks = search(case["question"], TOP_K)
-
-    retrieved_documents = [
-        chunk["fileName"]
-        for chunk in chunks
-    ]
-
-    distances = [
-        chunk["distance"]
-        for chunk in chunks
-    ]
-
-    best_distance = min(distances) if distances else None
-
-    expected_document = case["expectedDocument"]
-
-    result = {
-        "id": case["id"],
-        "question": case["question"],
-        "expectedDocument": expected_document,
-        "retrievedDocuments": retrieved_documents,
-        "distances": distances,
-        "bestDistance": best_distance,
-    }
-
-    if expected_document is not None:
-        result["rank"] = first_rank(
-            retrieved_documents,
-            expected_document,
-        )
-
-        result["hitAt1"] = hit_at_k(
-            retrieved_documents,
-            expected_document,
-            1,
-        )
-
-        result["hitAt3"] = hit_at_k(
-            retrieved_documents,
-            expected_document,
-            3,
-        )
-
-        result["hitAt5"] = hit_at_k(
-            retrieved_documents,
-            expected_document,
-            5,
-        )
-    else:
-        # For an irrelevant query, we ideally want no result to pass
-        # our relevance threshold.
-        result["correctlyRejected"] = (
-            best_distance is None
-            or best_distance > MAX_RELEVANT_DISTANCE
-        )
-
-    results.append(result)
-
-    print(f"[{index:02}/{len(cases)}] {case['id']}")
-
-
-# -----------------------------
-# Relevant-query metrics
-# -----------------------------
-
-relevant_results = [
-    r for r in results
-    if r["expectedDocument"] is not None
-]
-
-irrelevant_results = [
-    r for r in results
-    if r["expectedDocument"] is None
-]
+    return args
 
 
 def average(values):
     return sum(values) / len(values) if values else 0.0
 
 
-recall_at_1 = average([
-    1 if r["hitAt1"] else 0
-    for r in relevant_results
-])
-
-recall_at_3 = average([
-    1 if r["hitAt3"] else 0
-    for r in relevant_results
-])
-
-recall_at_5 = average([
-    1 if r["hitAt5"] else 0
-    for r in relevant_results
-])
+def distance_summary(values):
+    return {
+        "min": min(values) if values else None,
+        "max": max(values) if values else None,
+        "avg": average(values) if values else None,
+    }
 
 
-# Mean Reciprocal Rank (optional but useful).
-reciprocal_ranks = []
-
-for result in relevant_results:
-    rank = result["rank"]
-
-    reciprocal_ranks.append(
-        0.0 if rank is None else 1.0 / rank
+def reindex(session, base_url, chunking):
+    target_size, overlap = chunking
+    response = session.post(
+        f"{base_url.rstrip('/')}/api/knowledge/reindex",
+        params={"targetChunkSize": target_size, "chunkOverlap": overlap},
+        timeout=300,
     )
-
-mrr = average(reciprocal_ranks)
-
-
-# -----------------------------
-# Irrelevant-query metrics
-# -----------------------------
-
-rejection_accuracy = average([
-    1 if r["correctlyRejected"] else 0
-    for r in irrelevant_results
-])
+    response.raise_for_status()
 
 
-# -----------------------------
-# Distance summaries
-# -----------------------------
-
-relevant_best_distances = [
-    r["bestDistance"]
-    for r in relevant_results
-    if r["bestDistance"] is not None
-]
-
-irrelevant_best_distances = [
-    r["bestDistance"]
-    for r in irrelevant_results
-    if r["bestDistance"] is not None
-]
-
-
-print()
-print("=" * 60)
-print("RETRIEVAL EVALUATION")
-print("=" * 60)
-
-print(f"Relevant cases:   {len(relevant_results)}")
-print(f"Irrelevant cases: {len(irrelevant_results)}")
-print()
-
-print(f"Recall@1: {recall_at_1:.1%}")
-print(f"Recall@3: {recall_at_3:.1%}")
-print(f"Recall@5: {recall_at_5:.1%}")
-print(f"MRR:      {mrr:.3f}")
-
-print()
-print(
-    f"Irrelevant-query rejection @ distance > "
-    f"{MAX_RELEVANT_DISTANCE:.2f}: "
-    f"{rejection_accuracy:.1%}"
-)
-
-
-if relevant_best_distances:
-    print()
-    print("Relevant-query nearest distances:")
-    print(f"  min: {min(relevant_best_distances):.4f}")
-    print(f"  max: {max(relevant_best_distances):.4f}")
-    print(
-        f"  avg: "
-        f"{average(relevant_best_distances):.4f}"
+def search(session, base_url, question, top_k):
+    response = session.get(
+        f"{base_url.rstrip('/')}/api/knowledge/search",
+        params={"query": question, "topK": top_k},
+        timeout=30,
     )
+    response.raise_for_status()
+    return response.json()
 
 
-if irrelevant_best_distances:
-    print()
-    print("Irrelevant-query nearest distances:")
-    print(f"  min: {min(irrelevant_best_distances):.4f}")
-    print(f"  max: {max(irrelevant_best_distances):.4f}")
-    print(
-        f"  avg: "
-        f"{average(irrelevant_best_distances):.4f}"
-    )
+def evaluate(session, args, cases, chunking=None):
+    if chunking:
+        reindex(session, args.base_url, chunking)
+    results = []
 
+    for index, case in enumerate(cases, start=1):
+        chunks = search(session, args.base_url, case["question"], args.top_k)
+        documents = [chunk["fileName"] for chunk in chunks]
+        distances = [chunk["distance"] for chunk in chunks]
+        best_distance = min(distances) if distances else None
+        expected = case["expectedDocument"]
 
-# -----------------------------
-# Failure analysis
-# -----------------------------
+        result = {
+            "id": case["id"],
+            "question": case["question"],
+            "expectedDocument": expected,
+            "retrievedDocuments": documents,
+            "distances": distances,
+            "bestDistance": best_distance,
+        }
 
-failures_at_3 = [
-    r for r in relevant_results
-    if not r["hitAt3"]
-]
-
-print()
-print("=" * 60)
-print(f"FAILURES AT TOP 3: {len(failures_at_3)}")
-print("=" * 60)
-
-if not failures_at_3:
-    print("None.")
-else:
-    for result in failures_at_3:
-        print()
-        print(f"ID:       {result['id']}")
-        print(f"Question: {result['question']}")
-        print(f"Expected: {result['expectedDocument']}")
-
-        print("Retrieved:")
-
-        for rank, (document, distance) in enumerate(
-            zip(
-                result["retrievedDocuments"],
-                result["distances"],
-            ),
-            start=1,
-        ):
-            print(
-                f"  {rank}. {document} "
-                f"(distance={distance:.4f})"
+        if expected is not None:
+            rank = documents.index(expected) + 1 if expected in documents else None
+            result.update(
+                {
+                    "rank": rank,
+                    "hitAt1": expected in documents[:1],
+                    "hitAt3": expected in documents[:3],
+                    "hitAt5": expected in documents[:5],
+                }
+            )
+        else:
+            result["correctlyRejected"] = (
+                best_distance is None or best_distance > args.max_distance
             )
 
+        results.append(result)
+        print(f"  [{index:02}/{len(cases)}] {case['id']}")
 
-false_accepts = [
-    r for r in irrelevant_results
-    if not r["correctlyRejected"]
-]
+    relevant = [item for item in results if item["expectedDocument"] is not None]
+    irrelevant = [item for item in results if item["expectedDocument"] is None]
+    relevant_distances = [
+        item["bestDistance"] for item in relevant if item["bestDistance"] is not None
+    ]
+    irrelevant_distances = [
+        item["bestDistance"] for item in irrelevant if item["bestDistance"] is not None
+    ]
 
-print()
-print("=" * 60)
-print(f"IRRELEVANT QUERIES NOT REJECTED: {len(false_accepts)}")
-print("=" * 60)
+    summary = {
+        "topK": args.top_k,
+        "maxRelevantDistance": args.max_distance,
+        "relevantCases": len(relevant),
+        "irrelevantCases": len(irrelevant),
+        "recallAt1": average([int(item["hitAt1"]) for item in relevant]),
+        "recallAt3": average([int(item["hitAt3"]) for item in relevant]),
+        "recallAt5": average([int(item["hitAt5"]) for item in relevant]),
+        "mrr": average(
+            [0.0 if item["rank"] is None else 1.0 / item["rank"] for item in relevant]
+        ),
+        "irrelevantRejectionAccuracy": average(
+            [int(item["correctlyRejected"]) for item in irrelevant]
+        ),
+        "relevantNearestDistance": distance_summary(relevant_distances),
+        "irrelevantNearestDistance": distance_summary(irrelevant_distances),
+    }
 
-if not false_accepts:
-    print("None.")
-else:
-    for result in false_accepts:
-        print()
-        print(f"ID:           {result['id']}")
-        print(f"Question:     {result['question']}")
-        print(
-            f"Best distance: "
-            f"{result['bestDistance']:.4f}"
+    return {
+        "chunking": (
+            {"targetChunkSize": chunking[0], "chunkOverlap": chunking[1]}
+            if chunking
+            else None
+        ),
+        "summary": summary,
+        "results": results,
+    }
+
+
+def print_summary(run):
+    summary = run["summary"]
+    chunking = run["chunking"]
+    label = (
+        f"{chunking['targetChunkSize']}/{chunking['chunkOverlap']}"
+        if chunking
+        else "existing index"
+    )
+    print(f"\nResults for {label}")
+    print(f"  Recall@1: {summary['recallAt1']:.1%}")
+    print(f"  Recall@3: {summary['recallAt3']:.1%}")
+    print(f"  Recall@5: {summary['recallAt5']:.1%}")
+    print(f"  MRR:      {summary['mrr']:.3f}")
+    print(f"  Irrelevant rejection: {summary['irrelevantRejectionAccuracy']:.1%}")
+
+
+def run_score(run):
+    summary = run["summary"]
+    return (
+        summary["recallAt3"],
+        summary["mrr"],
+        summary["irrelevantRejectionAccuracy"],
+        summary["recallAt1"],
+    )
+
+
+def main():
+    args = parse_args()
+    with args.dataset.open("r", encoding="utf-8") as file:
+        cases = json.load(file)
+
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    configurations = args.chunking or [None]
+    runs = []
+
+    print(f"Running {len(cases)} cases against {args.base_url}...")
+    with requests.Session() as session:
+        for chunking in configurations:
+            if chunking:
+                print(f"\nReindexing with target/overlap {chunking[0]}/{chunking[1]}...")
+            run = evaluate(session, args, cases, chunking)
+            runs.append(run)
+            print_summary(run)
+
+            suffix = f"-{chunking[0]}-{chunking[1]}" if chunking else ""
+            result_path = args.output_dir / f"retrieval-results{suffix}.json"
+            result_path.write_text(
+                json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+            print(f"  Saved: {result_path}")
+
+    if len(runs) > 1:
+        best = max(runs, key=run_score)
+        comparison = {
+            "selectionOrder": [
+                "recallAt3",
+                "mrr",
+                "irrelevantRejectionAccuracy",
+                "recallAt1",
+            ],
+            "recommended": best["chunking"],
+            "runs": [
+                {
+                    "chunking": run["chunking"],
+                    "summary": run["summary"],
+                }
+                for run in runs
+            ],
+        }
+        comparison_path = args.output_dir / "retrieval-comparison.json"
+        comparison_path.write_text(
+            json.dumps(comparison, indent=2, ensure_ascii=False), encoding="utf-8"
         )
+        selected = best["chunking"]
+        print(
+            f"\nRecommended by retrieval score: "
+            f"{selected['targetChunkSize']}/{selected['chunkOverlap']}"
+        )
+        print(f"Comparison saved: {comparison_path}")
 
-        if result["retrievedDocuments"]:
-            print(
-                f"Nearest doc:   "
-                f"{result['retrievedDocuments'][0]}"
-            )
 
-
-# -----------------------------
-# Persist raw results
-# -----------------------------
-
-summary = {
-    "topK": TOP_K,
-    "maxRelevantDistance": MAX_RELEVANT_DISTANCE,
-    "relevantCases": len(relevant_results),
-    "irrelevantCases": len(irrelevant_results),
-    "recallAt1": recall_at_1,
-    "recallAt3": recall_at_3,
-    "recallAt5": recall_at_5,
-    "mrr": mrr,
-    "irrelevantRejectionAccuracy": rejection_accuracy,
-    "relevantNearestDistance": {
-        "min": (
-            min(relevant_best_distances)
-            if relevant_best_distances
-            else None
-        ),
-        "max": (
-            max(relevant_best_distances)
-            if relevant_best_distances
-            else None
-        ),
-        "avg": (
-            average(relevant_best_distances)
-            if relevant_best_distances
-            else None
-        ),
-    },
-    "irrelevantNearestDistance": {
-        "min": (
-            min(irrelevant_best_distances)
-            if irrelevant_best_distances
-            else None
-        ),
-        "max": (
-            max(irrelevant_best_distances)
-            if irrelevant_best_distances
-            else None
-        ),
-        "avg": (
-            average(irrelevant_best_distances)
-            if irrelevant_best_distances
-            else None
-        ),
-    },
-}
-
-output = {
-    "summary": summary,
-    "results": results,
-}
-
-with RESULTS_PATH.open("w", encoding="utf-8") as f:
-    json.dump(
-        output,
-        f,
-        indent=2,
-        ensure_ascii=False,
-    )
-
-print()
-print(f"Raw results saved to: {RESULTS_PATH}")
+if __name__ == "__main__":
+    try:
+        main()
+    except requests.RequestException as error:
+        raise SystemExit(f"HTTP request failed: {error}") from error

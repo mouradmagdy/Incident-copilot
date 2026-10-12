@@ -4,5 +4,8 @@ namespace IncidentCopilot.Application.Knowledge;
 
 public interface IKnowledgeIndexer
 {
-     Task IndexAllAsync(CancellationToken cancellationToken = default);
+    Task IndexAllAsync(
+        int? targetChunkSize = null,
+        int? chunkOverlap = null,
+        CancellationToken cancellationToken = default);
 }

@@ -2,11 +2,21 @@ namespace IncidentCopilot.Application.Knowledge;
 
 public sealed class MarkdownChunker : IMarkdownChunker
 {
-    private const int TargetChunkSize = 800;
-    private const int OverlapSize = 100;
-
-    public IReadOnlyList<TextChunk> Chunk(string markdown)
+    public IReadOnlyList<TextChunk> Chunk(
+        string markdown,
+        int targetChunkSize = 800,
+        int chunkOverlap = 100)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetChunkSize);
+        ArgumentOutOfRangeException.ThrowIfNegative(chunkOverlap);
+
+        if (chunkOverlap >= targetChunkSize)
+        {
+            throw new ArgumentException(
+                "Chunk overlap must be smaller than the target chunk size.",
+                nameof(chunkOverlap));
+        }
+
         if (string.IsNullOrWhiteSpace(markdown))
         {
             return [];
@@ -27,11 +37,11 @@ public sealed class MarkdownChunker : IMarkdownChunker
             }
             var additionalLength = block.Length + (currentParts.Count > 0 ? 2 : 0);
 
-            if (currentParts.Count > 0 && currentLength + additionalLength > TargetChunkSize)
+            if (currentParts.Count > 0 && currentLength + additionalLength > targetChunkSize)
             {
                 AddChunk(chunks, currentParts, currentSection);
 
-                currentParts = GetOverlapParts(currentParts);
+                currentParts = GetOverlapParts(currentParts, chunkOverlap);
                 currentLength = CalculateLength(currentParts);
             }
             currentParts.Add(block);
@@ -60,8 +70,14 @@ public sealed class MarkdownChunker : IMarkdownChunker
     }
 
     private static List<string> GetOverlapParts(
-        List<string> parts)
+        List<string> parts,
+        int chunkOverlap)
     {
+        if (chunkOverlap == 0)
+        {
+            return [];
+        }
+
         var overlap = new List<string>();
         var length = 0;
 
@@ -69,7 +85,7 @@ public sealed class MarkdownChunker : IMarkdownChunker
         {
             var part = parts[i];
 
-            if (length + part.Length > OverlapSize &&
+            if (length + part.Length > chunkOverlap &&
                 overlap.Count > 0)
             {
                 break;
@@ -78,7 +94,7 @@ public sealed class MarkdownChunker : IMarkdownChunker
             overlap.Insert(0, part);
             length += part.Length;
 
-            if (length >= OverlapSize)
+            if (length >= chunkOverlap)
                 break;
         }
 

@@ -1,4 +1,5 @@
 using IncidentCopilot.Api.Contracts.Chat;
+using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Core.AI;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,16 +9,12 @@ namespace IncidentCopilot.Api.Controllers;
 [Route("api/chat")]
 public sealed class ChatController : ControllerBase
 {
-    private const string SystemPrompt =
-        "You are Incident Copilot, an assistant helping software engineers " +
-        "investigate production incidents. Answer clearly. If you do not " +
-        "have enough information to determine the cause, say so.";
+  
+    private readonly IChatService _chatService;
 
-    private readonly ILlmClient _llmClient;
-
-    public ChatController(ILlmClient llmClient)
+    public ChatController(IChatService chatService)
     {
-        _llmClient = llmClient;
+        _chatService = chatService;
     }
 
     [HttpPost]
@@ -27,10 +24,10 @@ public sealed class ChatController : ControllerBase
         ChatRequest request,
         CancellationToken cancellationToken)
     {
-        var response = await _llmClient.GenerateAsync(
-            new LlmRequest(SystemPrompt, request.Message),
+        var response = await _chatService.AskAsync(
+            request.Message,
             cancellationToken);
 
-        return Ok(new ChatResponse(response.Content));
+        return Ok(response);
     }
 }

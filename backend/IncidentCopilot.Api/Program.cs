@@ -1,4 +1,5 @@
 using IncidentCopilot.Api.Endpoints;
+using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
@@ -40,6 +41,7 @@ builder.Services
 builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
 builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 builder.Services
     .AddOptions<KnowledgeOptions>()

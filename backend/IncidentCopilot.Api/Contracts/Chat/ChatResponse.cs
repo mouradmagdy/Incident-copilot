@@ -1,3 +1,3 @@
-namespace IncidentCopilot.Api.Contracts.Chat;
+//namespace IncidentCopilot.Api.Contracts.Chat;
 
-public sealed record ChatResponse(string Content);
+//public sealed record ChatResponse(string Content);

@@ -6,6 +6,10 @@ public interface ILlmClient
         LlmRequest request,
         CancellationToken cancellationToken);
 
+    Task<LlmTurnResponse> GenerateWithToolsAsync(
+        LlmToolRequest request,
+        CancellationToken cancellationToken);
+
     IAsyncEnumerable<string> GenerateStreamAsync(
         LlmRequest request,
         CancellationToken cancellationToken);

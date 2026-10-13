@@ -1,8 +1,10 @@
 using IncidentCopilot.Api.Endpoints;
+using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
+using IncidentCopilot.Infrastructure.AI.Tools.GetServiceMetrics;
 using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +41,7 @@ builder.Services
         "Groq:Model must be configured.");
 
 builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
+builder.Services.AddScoped<IAgentTool, GetServiceMetricsTool>();
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
 builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
 builder.Services.AddScoped<IChatService, ChatService>();

@@ -60,6 +60,54 @@ public sealed class GroqLlmClient : ILlmClient
         return new LlmResponse(content);
     }
 
+    public async Task<LlmTurnResponse> GenerateWithToolsAsync(
+        LlmToolRequest request,
+        CancellationToken cancellationToken)
+    {
+        var tools = request.Tools
+            .Select(tool => new ChatTool(
+                "function",
+                new ChatFunctionDefinition(
+                    tool.Name,
+                    tool.Description,
+                    tool.Parameters)))
+            .ToArray();
+
+        var payload = new ChatCompletionRequest(
+            _options.Model,
+            [
+                new ChatMessage("system", request.SystemPrompt),
+                new ChatMessage("user", request.UserMessage)
+            ],
+            false,
+            tools,
+            "auto");
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            "chat/completions",
+            payload,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        var completion = await response.Content
+            .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
+
+        var message = completion?.Choices.FirstOrDefault()?.Message
+            ?? throw new InvalidOperationException(
+                "Groq returned a response without a message.");
+
+        var toolCalls = message.ToolCalls?
+            .Select(toolCall => new LlmToolCall(
+                toolCall.Id,
+                toolCall.Function.Name,
+                toolCall.Function.Arguments))
+            .ToArray()
+            ?? [];
+
+        return new LlmTurnResponse(message.Content, toolCalls);
+    }
+
     public async IAsyncEnumerable<string> GenerateStreamAsync(
         LlmRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -117,11 +165,37 @@ public sealed class GroqLlmClient : ILlmClient
     private sealed record ChatCompletionRequest(
         [property: JsonPropertyName("model")] string Model,
         [property: JsonPropertyName("messages")] IReadOnlyList<ChatMessage> Messages,
-        [property: JsonPropertyName("stream")] bool Stream);
+        [property: JsonPropertyName("stream")] bool Stream,
+        [property: JsonPropertyName("tools")]
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<ChatTool>? Tools = null,
+        [property: JsonPropertyName("tool_choice")]
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? ToolChoice = null);
 
     private sealed record ChatMessage(
         [property: JsonPropertyName("role")] string Role,
-        [property: JsonPropertyName("content")] string Content);
+        [property: JsonPropertyName("content")] string? Content,
+        [property: JsonPropertyName("tool_calls")]
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<ChatToolCall>? ToolCalls = null);
+
+    private sealed record ChatTool(
+        [property: JsonPropertyName("type")] string Type,
+        [property: JsonPropertyName("function")] ChatFunctionDefinition Function);
+
+    private sealed record ChatFunctionDefinition(
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("description")] string Description,
+        [property: JsonPropertyName("parameters")] object Parameters);
+
+    private sealed record ChatToolCall(
+        [property: JsonPropertyName("id")] string Id,
+        [property: JsonPropertyName("function")] ChatToolCallFunction Function);
+
+    private sealed record ChatToolCallFunction(
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("arguments")] string Arguments);
 
     private sealed record ChatCompletionResponse(
         [property: JsonPropertyName("choices")] IReadOnlyList<ChatCompletionChoice> Choices);

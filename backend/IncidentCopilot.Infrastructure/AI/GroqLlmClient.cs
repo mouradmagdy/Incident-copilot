@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using IncidentCopilot.Core.AI;
 using Microsoft.Extensions.Options;
@@ -34,7 +36,8 @@ public sealed class GroqLlmClient : ILlmClient
             [
                 new ChatMessage("system", request.SystemPrompt),
                 new ChatMessage("user", request.UserMessage)
-            ]);
+            ],
+            false);
 
         using var response = await _httpClient.PostAsJsonAsync(
             "chat/completions",
@@ -57,9 +60,64 @@ public sealed class GroqLlmClient : ILlmClient
         return new LlmResponse(content);
     }
 
+    public async IAsyncEnumerable<string> GenerateStreamAsync(
+        LlmRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var payload = new ChatCompletionRequest(
+            _options.Model,
+            [
+                new ChatMessage("system", request.SystemPrompt),
+                new ChatMessage("user", request.UserMessage)
+            ],
+            true);
+
+        using var httpRequest = new HttpRequestMessage(
+            HttpMethod.Post,
+            "chat/completions")
+        {
+            Content = JsonContent.Create(payload)
+        };
+
+        using var response = await _httpClient.SendAsync(
+            httpRequest,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content
+            .ReadAsStreamAsync(cancellationToken);
+        using var reader = new StreamReader(stream);
+
+        while (await reader.ReadLineAsync(cancellationToken) is { } line)
+        {
+            if (!line.StartsWith("data: ", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var data = line["data: ".Length..];
+
+            if (data == "[DONE]")
+            {
+                yield break;
+            }
+
+            var chunk = JsonSerializer.Deserialize<ChatCompletionChunk>(data);
+            var content = chunk?.Choices.FirstOrDefault()?.Delta?.Content;
+
+            if (!string.IsNullOrEmpty(content))
+            {
+                yield return content;
+            }
+        }
+    }
+
     private sealed record ChatCompletionRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] IReadOnlyList<ChatMessage> Messages);
+        [property: JsonPropertyName("messages")] IReadOnlyList<ChatMessage> Messages,
+        [property: JsonPropertyName("stream")] bool Stream);
 
     private sealed record ChatMessage(
         [property: JsonPropertyName("role")] string Role,
@@ -70,4 +128,13 @@ public sealed class GroqLlmClient : ILlmClient
 
     private sealed record ChatCompletionChoice(
         [property: JsonPropertyName("message")] ChatMessage Message);
+
+    private sealed record ChatCompletionChunk(
+        [property: JsonPropertyName("choices")] IReadOnlyList<ChatCompletionChunkChoice> Choices);
+
+    private sealed record ChatCompletionChunkChoice(
+        [property: JsonPropertyName("delta")] ChatCompletionDelta? Delta);
+
+    private sealed record ChatCompletionDelta(
+        [property: JsonPropertyName("content")] string? Content);
 }

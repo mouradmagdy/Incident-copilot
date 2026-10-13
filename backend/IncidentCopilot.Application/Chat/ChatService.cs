@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Core.AI;
 using Microsoft.Extensions.Logging;
@@ -28,7 +29,7 @@ public sealed class ChatService : IChatService
         _diagnosticsOptions = diagnosticsOptions.Value;
     }
 
-    public async Task<ChatResponse> AskAsync(
+    public async Task<ChatStreamResponse> AskStreamAsync(
         string message,
         CancellationToken cancellationToken)
     {
@@ -67,31 +68,14 @@ public sealed class ChatService : IChatService
                 "LLM duration: {LlmDurationMs} ms. LLM call skipped because no chunks survived the distance threshold.",
                 0);
 
-            return new ChatResponse(
-                "I don't have relevant internal documentation to answer that question.",
+            return new ChatStreamResponse(
+                StreamText("I don't have relevant internal documentation to answer that question."),
                 []);
         }
 
         var context = BuildContext(relevantChunks);
         var systemPrompt = BuildSystemPrompt(context);
         var llmRequest = new LlmRequest(systemPrompt, message);
-        LlmResponse llmResponse;
-        var llmStopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            llmResponse = await _llmClient.GenerateAsync(
-                llmRequest,
-                cancellationToken);
-        }
-        finally
-        {
-            llmStopwatch.Stop();
-            _logger.LogInformation(
-                "LLM duration: {LlmDurationMs:F0} ms.",
-                llmStopwatch.Elapsed.TotalMilliseconds);
-        }
-
         // Sources come from retrieved context, never from the LLM response.
         var sources = relevantChunks
             .DistinctBy(chunk => (chunk.FileName, chunk.Section))
@@ -101,7 +85,39 @@ public sealed class ChatService : IChatService
                 chunk.Section))
             .ToList();
 
-        return new ChatResponse(llmResponse.Content, sources);
+        return new ChatStreamResponse(
+            StreamLlmResponseAsync(llmRequest, cancellationToken),
+            sources);
+    }
+
+    private async IAsyncEnumerable<string> StreamLlmResponseAsync(
+        LlmRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var llmStopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            await foreach (var content in _llmClient
+                .GenerateStreamAsync(request, cancellationToken)
+                .WithCancellation(cancellationToken))
+            {
+                yield return content;
+            }
+        }
+        finally
+        {
+            llmStopwatch.Stop();
+            _logger.LogInformation(
+                "LLM duration: {LlmDurationMs:F0} ms.",
+                llmStopwatch.Elapsed.TotalMilliseconds);
+        }
+    }
+
+    private static async IAsyncEnumerable<string> StreamText(string content)
+    {
+        yield return content;
+        await Task.CompletedTask;
     }
 
     private void LogRetrievedChunks(

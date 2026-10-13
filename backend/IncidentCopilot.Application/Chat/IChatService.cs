@@ -8,6 +8,8 @@ namespace IncidentCopilot.Application.Chat
 {
     public interface IChatService
     {
-        Task<ChatResponse> AskAsync(string message, CancellationToken cancellationToken = default);
+        Task<ChatStreamResponse> AskStreamAsync(
+            string message,
+            CancellationToken cancellationToken = default);
     }
 }

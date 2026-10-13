@@ -16,17 +16,37 @@ export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
 
   const mutation = useMutation({
-    mutationFn: chatApi.sendMessage,
-    onSuccess: (response) => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: nextMessageId++,
-          role: 'assistant',
-          content: response.content,
-          sources: response.sources ?? [],
-        },
-      ])
+    mutationFn: ({ message, assistantId }: { message: string; assistantId: number }) => {
+      return chatApi.sendMessage(message, (event) => {
+        setMessages((current) => {
+          const assistantMessage = current.find(({ id }) => id === assistantId)
+
+          if (event.type === 'delta') {
+            if (!assistantMessage) {
+              return [
+                ...current,
+                {
+                  id: assistantId,
+                  role: 'assistant',
+                  content: event.content,
+                },
+              ]
+            }
+
+            return current.map((item) =>
+              item.id === assistantId
+                ? { ...item, content: item.content + event.content }
+                : item,
+            )
+          }
+
+          return current.map((item) =>
+            item.id === assistantId
+              ? { ...item, sources: event.sources }
+              : item,
+          )
+        })
+      })
     },
   })
 
@@ -38,7 +58,10 @@ export function useChat() {
       ...current,
       { id: nextMessageId++, role: 'user', content: trimmedMessage },
     ])
-    mutation.mutate(trimmedMessage)
+    mutation.mutate({
+      message: trimmedMessage,
+      assistantId: nextMessageId++,
+    })
     return true
   }
 

@@ -1,0 +1,167 @@
+{
+  "startedAtUtc": "2026-10-14T13:38:16.495474+00:00",
+  "completedAtUtc": "2026-10-14T13:38:26.690197+00:00",
+  "baseUrl": "http://localhost:5087",
+  "dataset": "C:\\Users\\user\\Desktop\\incident-copilot\\evals\\runtime-failures.json",
+  "summary": {
+    "caseCount": 3,
+    "requiredToolSelection": 1.0,
+    "unnecessaryToolAvoidance": 1.0,
+    "argumentAccuracy": 1.0,
+    "toolExecutionSuccess": 0.0,
+    "expectedFailureHandling": 1.0,
+    "noDataGrounding": 0.6666666666666666,
+    "overallCaseAccuracy": 0.6666666666666666
+  },
+  "results": [
+    {
+      "id": "failure-invalid-service-1",
+      "question": "What is BillingService's current p95 latency?",
+      "answer": "I’m unable to retrieve the current p95 latency for BillingService because no recent metrics were found for that service.",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "BillingService"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"BillingService\"}",
+          "success": false,
+          "error": "No recent metrics were found for service 'BillingService'."
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [
+        {
+          "toolName": "get_service_metrics",
+          "error": "No recent metrics were found for service 'BillingService'."
+        }
+      ],
+      "expectToolFailure": true,
+      "toolFailureFailures": [],
+      "mustNotInventData": true,
+      "groundingFailures": [],
+      "toolFault": "None",
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": false,
+      "toolFailurePassed": true,
+      "executionOutcomePassed": true,
+      "noDataGroundingPassed": true,
+      "passed": true
+    },
+    {
+      "id": "failure-invalid-service-2",
+      "question": "Show recent errors from SearchService.",
+      "answer": "I’m unable to retrieve recent errors for **SearchService** because that service could not be found in the monitoring system. If you need information about a different service or have another question, please let me know.",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "SearchService"
+        }
+      },
+      "actualTools": [
+        "get_recent_logs"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_recent_logs",
+          "argumentsJson": "{\"maxResults\":20,\"minimumLevel\":\"Error\",\"minutes\":15,\"serviceName\":\"SearchService\"}",
+          "success": false,
+          "error": "Monitored service 'SearchService' was not found."
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [
+        {
+          "toolName": "get_recent_logs",
+          "error": "Monitored service 'SearchService' was not found."
+        }
+      ],
+      "expectToolFailure": true,
+      "toolFailureFailures": [],
+      "mustNotInventData": true,
+      "groundingFailures": [],
+      "toolFault": "None",
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": false,
+      "toolFailurePassed": true,
+      "executionOutcomePassed": true,
+      "noDataGroundingPassed": true,
+      "passed": true
+    },
+    {
+      "id": "failure-metrics-timeout-1",
+      "question": "What is OrderService's current p95 latency?",
+      "answer": "I’m sorry, but I wasn’t able to retrieve the current metrics for OrderService. I cannot provide the p95 latency at this time.",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"OrderService\"}",
+          "success": false,
+          "error": "Tool 'get_service_metrics' timed out."
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [
+        {
+          "toolName": "get_service_metrics",
+          "error": "Tool 'get_service_metrics' timed out."
+        }
+      ],
+      "expectToolFailure": true,
+      "toolFailureFailures": [],
+      "mustNotInventData": true,
+      "groundingFailures": [
+        "The answer did not acknowledge that runtime data was unavailable."
+      ],
+      "toolFault": "MetricsTimeout",
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": false,
+      "toolFailurePassed": true,
+      "executionOutcomePassed": true,
+      "noDataGroundingPassed": false,
+      "passed": false
+    }
+  ]
+}

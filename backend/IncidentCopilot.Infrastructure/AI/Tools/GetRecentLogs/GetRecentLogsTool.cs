@@ -15,10 +15,14 @@ public sealed class GetRecentLogsTool : IAgentTool
     };
 
     private readonly IncidentCopilotDbContext _dbContext;
+    private readonly IToolFaultInjector _faultInjector;
 
-    public GetRecentLogsTool(IncidentCopilotDbContext dbContext)
+    public GetRecentLogsTool(
+        IncidentCopilotDbContext dbContext,
+        IToolFaultInjector faultInjector)
     {
         _dbContext = dbContext;
+        _faultInjector = faultInjector;
     }
 
     public string Name => "get_recent_logs";
@@ -78,6 +82,21 @@ public sealed class GetRecentLogsTool : IAgentTool
         string argumentsJson,
         CancellationToken cancellationToken)
     {
+        if (_faultInjector.CurrentFault == ToolFault.LogsTimeout)
+        {
+            await Task.Delay(
+                TimeSpan.FromSeconds(10),
+                cancellationToken);
+        }
+
+        if (_faultInjector.CurrentFault == ToolFault.LogsFailure)
+        {
+            return new ToolResult(
+                false,
+                string.Empty,
+                $"Injected failure for tool '{Name}'.");
+        }
+
         GetRecentLogsArguments? arguments;
 
         try
@@ -125,10 +144,24 @@ public sealed class GetRecentLogsTool : IAgentTool
             minimumLevel = parsedMinimumLevel;
         }
 
+        var serviceId = await _dbContext.Services
+            .AsNoTracking()
+            .Where(service => service.Name == arguments.ServiceName)
+            .Select(service => (int?)service.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (!serviceId.HasValue)
+        {
+            return new ToolResult(
+                false,
+                string.Empty,
+                $"Monitored service '{arguments.ServiceName}' was not found.");
+        }
+
         var logs = await _dbContext.LogEvents
             .AsNoTracking()
             .Where(logEvent =>
-                logEvent.Service.Name == arguments.ServiceName &&
+                logEvent.ServiceId == serviceId.Value &&
                 logEvent.TimestampUtc >= cutoff &&
                 (!minimumLevel.HasValue ||
                  logEvent.Level >= minimumLevel.Value))

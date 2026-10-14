@@ -1,0 +1,36 @@
+[
+  {
+    "id": "failure-invalid-service-1",
+    "question": "What is BillingService's current p95 latency?",
+    "expectedTool": "get_service_metrics",
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "BillingService"}
+    },
+    "expectToolFailure": true,
+    "expectedErrorContains": "No recent metrics were found",
+    "mustNotInventData": true
+  },
+  {
+    "id": "failure-invalid-service-2",
+    "question": "Show recent errors from SearchService.",
+    "expectedTool": "get_recent_logs",
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "SearchService"}
+    },
+    "expectToolFailure": true,
+    "expectedErrorContains": "was not found",
+    "mustNotInventData": true
+  },
+  {
+    "id": "failure-metrics-timeout-1",
+    "question": "What is OrderService's current p95 latency?",
+    "expectedTool": "get_service_metrics",
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "OrderService"}
+    },
+    "expectToolFailure": true,
+    "expectedErrorContains": "timed out",
+    "mustNotInventData": true,
+    "toolFault": "MetricsTimeout"
+  }
+]

@@ -27,16 +27,19 @@ public sealed class ChatService : IChatService
     private readonly ILogger<ChatService> _logger;
     private readonly ChatDiagnosticsOptions _diagnosticsOptions;
     private readonly IReadOnlyDictionary<string, IAgentTool> _agentTools;
+    private readonly ToolExecutor _toolExecutor;
 
     public ChatService(
         IKnowledgeRetriever retriever,
         ILlmClient llmClient,
         IEnumerable<IAgentTool> agentTools,
+        ToolExecutor toolExecutor,
         ILogger<ChatService> logger,
         IOptions<ChatDiagnosticsOptions> diagnosticsOptions)
     {
         _retriever = retriever;
         _llmClient = llmClient;
+        _toolExecutor = toolExecutor;
         _logger = logger;
         _diagnosticsOptions = diagnosticsOptions.Value;
         _agentTools = agentTools.ToDictionary(
@@ -272,7 +275,8 @@ public sealed class ChatService : IChatService
 
                 try
                 {
-                    toolResult = await requestedTool.ExecuteAsync(
+                    toolResult = await _toolExecutor.ExecuteAsync(
+                        requestedTool,
                         requestedToolCall.ArgumentsJson,
                         cancellationToken);
                 }
@@ -424,6 +428,11 @@ public sealed class ChatService : IChatService
             as current runtime state.
 
             Do not invent tool results.
+
+            If a tool fails, times out, or reports that data was not found,
+            clearly tell the user that the requested runtime information could
+            not be retrieved. Never estimate, infer, or invent the missing
+            runtime value.
 
             Internal documentation:
 

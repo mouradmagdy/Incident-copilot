@@ -44,6 +44,7 @@ builder.Services
 builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
 builder.Services.AddScoped<IAgentTool, GetServiceMetricsTool>();
 builder.Services.AddScoped<IAgentTool, GetRecentLogsTool>();
+builder.Services.AddScoped<ToolExecutor>();
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
 builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
 builder.Services.AddScoped<IChatService, ChatService>();
@@ -114,6 +115,12 @@ builder.Services.AddScoped<IKnowledgeRetriever, KnowledgeRetriever>();
 
 if (builder.Environment.IsDevelopment())
 {
+    builder.Services.AddSingleton<DevelopmentToolFaultInjector>();
+    builder.Services.AddSingleton<IToolFaultInjector>(serviceProvider =>
+        serviceProvider.GetRequiredService<DevelopmentToolFaultInjector>());
+    builder.Services.AddSingleton<IToolFaultState>(serviceProvider =>
+        serviceProvider.GetRequiredService<DevelopmentToolFaultInjector>());
+
     builder.Services
         .AddOptions<TelemetrySimulationOptions>()
         .Bind(builder.Configuration.GetSection(
@@ -133,6 +140,10 @@ if (builder.Environment.IsDevelopment())
 
     builder.Services.AddHostedService<
         TelemetrySimulationService>();
+}
+else
+{
+    builder.Services.AddSingleton<IToolFaultInjector, NoToolFaultInjector>();
 }
 builder.Services.AddControllers();
 

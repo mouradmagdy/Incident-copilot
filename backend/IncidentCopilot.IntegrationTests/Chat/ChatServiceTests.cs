@@ -162,6 +162,11 @@ public sealed class ChatServiceTests
         Assert.Equal(toolCall.ArgumentsJson, trace.ArgumentsJson);
         Assert.False(trace.Success);
         Assert.Equal("No logs were found.", trace.Error);
+        var exchange = Assert.Single(
+            llmClient.AgentRoundRequests[1].ToolExchanges);
+        Assert.Equal(
+            "{\"error\":\"No logs were found.\"}",
+            exchange.ToolResult);
     }
 
     [Fact]
@@ -204,6 +209,7 @@ public sealed class ChatServiceTests
             new EmptyKnowledgeRetriever(),
             llmClient,
             tools,
+            new ToolExecutor(),
             NullLogger<ChatService>.Instance,
             Options.Create(new ChatDiagnosticsOptions()));
     }

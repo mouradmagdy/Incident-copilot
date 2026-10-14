@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -7,6 +8,18 @@ import requests
 
 
 HERE = Path(__file__).resolve().parent
+
+FAILURE_ACKNOWLEDGEMENT_PATTERN = re.compile(
+    r"\b(could(?:n['’]t| not)|unable|unavailable|failed|failure|"
+    r"timed?\s*out|not found|no recent|no telemetry|no data|"
+    r"does not exist|doesn['’]t exist)\b",
+    re.IGNORECASE,
+)
+RUNTIME_VALUE_PATTERN = re.compile(
+    r"\b\d+(?:\.\d+)?\s*(?:ms|milliseconds?|seconds?|secs?|%|"
+    r"percent|rps|requests?\s+per\s+second|connections?)\b",
+    re.IGNORECASE,
+)
 
 
 def parse_args():
@@ -91,12 +104,94 @@ def evaluate_arguments(tool_calls, expected_arguments):
     return not failures, failures
 
 
+def get_required_tools(case):
+    if "requiredTools" in case:
+        return case["requiredTools"]
+
+    expected_tool = case.get("expectedTool")
+    return [expected_tool] if expected_tool else []
+
+
+def get_allowed_tools(case, required_tools):
+    return case.get("allowedTools", required_tools)
+
+
+def evaluate_expected_failure(
+    tool_calls,
+    required_tools,
+    expected_error_contains,
+):
+    failures = []
+
+    for tool_name in required_tools:
+        candidates = [
+            tool_call
+            for tool_call in tool_calls
+            if tool_call.get("toolName") == tool_name
+        ]
+        failed_candidates = [
+            tool_call
+            for tool_call in candidates
+            if not tool_call.get("success", False)
+        ]
+
+        if not failed_candidates:
+            failures.append(
+                {
+                    "toolName": tool_name,
+                    "reason": "The expected tool failure did not occur.",
+                }
+            )
+            continue
+
+        if expected_error_contains and not any(
+            expected_error_contains.lower()
+            in (candidate.get("error") or "").lower()
+            for candidate in failed_candidates
+        ):
+            failures.append(
+                {
+                    "toolName": tool_name,
+                    "reason": "The tool failed with an unexpected error.",
+                    "expectedErrorContains": expected_error_contains,
+                    "actualErrors": [
+                        candidate.get("error")
+                        for candidate in failed_candidates
+                    ],
+                }
+            )
+
+    return not failures, failures
+
+
+def evaluate_no_data_grounding(answer, must_not_invent_data):
+    if not must_not_invent_data:
+        return True, []
+
+    failures = []
+    if not FAILURE_ACKNOWLEDGEMENT_PATTERN.search(answer):
+        failures.append(
+            "The answer did not acknowledge that runtime data was unavailable."
+        )
+
+    invented_values = RUNTIME_VALUE_PATTERN.findall(answer)
+    if invented_values:
+        failures.append(
+            "The answer contained an unsupported runtime value: "
+            + ", ".join(invented_values)
+        )
+
+    return not failures, failures
+
+
 def evaluate_case(case, response):
     tool_calls = response.get("toolCalls", [])
     actual_tools = [tool_call.get("toolName") for tool_call in tool_calls]
-    required_tools = case.get("requiredTools", [])
-    allowed_tools = case.get("allowedTools", [])
+    required_tools = get_required_tools(case)
+    allowed_tools = get_allowed_tools(case, required_tools)
     expected_arguments = case.get("expectedArguments", {})
+    expect_tool_failure = case.get("expectToolFailure", False)
+    must_not_invent_data = case.get("mustNotInventData", False)
 
     missing_tools = sorted(set(required_tools) - set(actual_tools))
     unexpected_tools = [
@@ -116,11 +211,30 @@ def evaluate_case(case, response):
         for tool_call in tool_calls
         if not tool_call.get("success", False)
     ]
+    tool_failure_passed, tool_failure_failures = (
+        evaluate_expected_failure(
+            tool_calls,
+            required_tools,
+            case.get("expectedErrorContains"),
+        )
+        if expect_tool_failure
+        else (True, [])
+    )
+    answer = response.get("answer", "")
+    no_data_grounding_passed, grounding_failures = (
+        evaluate_no_data_grounding(answer, must_not_invent_data)
+    )
+    execution_passed = not execution_failures
+    execution_outcome_passed = (
+        tool_failure_passed
+        if expect_tool_failure
+        else execution_passed
+    )
 
     result = {
         "id": case["id"],
         "question": case["question"],
-        "answer": response.get("answer", ""),
+        "answer": answer,
         "requiredTools": required_tools,
         "allowedTools": allowed_tools,
         "expectedArguments": expected_arguments,
@@ -130,33 +244,45 @@ def evaluate_case(case, response):
         "unexpectedTools": unexpected_tools,
         "argumentFailures": argument_failures,
         "executionFailures": execution_failures,
+        "expectToolFailure": expect_tool_failure,
+        "toolFailureFailures": tool_failure_failures,
+        "mustNotInventData": must_not_invent_data,
+        "groundingFailures": grounding_failures,
+        "toolFault": case.get("toolFault", "None"),
         "requiredToolsPassed": not missing_tools,
         "noUnnecessaryTools": not unexpected_tools,
         "argumentsPassed": arguments_passed,
-        "executionPassed": not execution_failures,
+        "executionPassed": execution_passed,
+        "toolFailurePassed": tool_failure_passed,
+        "executionOutcomePassed": execution_outcome_passed,
+        "noDataGroundingPassed": no_data_grounding_passed,
     }
     result["passed"] = all(
         [
             result["requiredToolsPassed"],
             result["noUnnecessaryTools"],
             result["argumentsPassed"],
-            result["executionPassed"],
+            result["executionOutcomePassed"],
+            result["noDataGroundingPassed"],
         ]
     )
     return result
 
 
 def failed_http_case(case, error):
+    required_tools = get_required_tools(case)
+    allowed_tools = get_allowed_tools(case, required_tools)
+
     return {
         "id": case["id"],
         "question": case["question"],
         "answer": "",
-        "requiredTools": case.get("requiredTools", []),
-        "allowedTools": case.get("allowedTools", []),
+        "requiredTools": required_tools,
+        "allowedTools": allowed_tools,
         "expectedArguments": case.get("expectedArguments", {}),
         "actualTools": [],
         "toolCalls": [],
-        "missingTools": case.get("requiredTools", []),
+        "missingTools": required_tools,
         "unexpectedTools": [],
         "argumentFailures": [],
         "executionFailures": [],
@@ -164,6 +290,14 @@ def failed_http_case(case, error):
         "noUnnecessaryTools": False,
         "argumentsPassed": False,
         "executionPassed": False,
+        "expectToolFailure": case.get("expectToolFailure", False),
+        "toolFailurePassed": False,
+        "toolFailureFailures": [],
+        "executionOutcomePassed": False,
+        "mustNotInventData": case.get("mustNotInventData", False),
+        "noDataGroundingPassed": False,
+        "groundingFailures": [],
+        "toolFault": case.get("toolFault", "None"),
         "passed": False,
         "endpointError": str(error),
     }
@@ -179,9 +313,29 @@ def calculate_summary(results):
     argument_accuracy = average(
         [1 if result["argumentsPassed"] else 0 for result in results]
     )
-    execution_success_rate = average(
-        [1 if result["executionPassed"] else 0 for result in results]
-    )
+    successful_execution_cases = [
+        result
+        for result in results
+        if result["requiredTools"] and not result["expectToolFailure"]
+    ]
+    execution_success_rate = average([
+        1 if result["executionPassed"] else 0
+        for result in successful_execution_cases
+    ])
+    expected_failure_cases = [
+        result for result in results if result["expectToolFailure"]
+    ]
+    failure_handling_accuracy = average([
+        1 if result["executionOutcomePassed"] else 0
+        for result in expected_failure_cases
+    ])
+    no_data_cases = [
+        result for result in results if result["mustNotInventData"]
+    ]
+    no_data_grounding_accuracy = average([
+        1 if result["noDataGroundingPassed"] else 0
+        for result in no_data_cases
+    ])
     overall_accuracy = average(
         [1 if result["passed"] else 0 for result in results]
     )
@@ -192,6 +346,8 @@ def calculate_summary(results):
         "unnecessaryToolAvoidance": unnecessary_tool_avoidance,
         "argumentAccuracy": argument_accuracy,
         "toolExecutionSuccess": execution_success_rate,
+        "expectedFailureHandling": failure_handling_accuracy,
+        "noDataGrounding": no_data_grounding_accuracy,
         "overallCaseAccuracy": overall_accuracy,
     }
 
@@ -237,6 +393,14 @@ def print_summary(summary):
         f"{summary['toolExecutionSuccess']:.1%}"
     )
     print(
+        f"Expected failure handling:  "
+        f"{summary['expectedFailureHandling']:.1%}"
+    )
+    print(
+        f"No-data grounding:          "
+        f"{summary['noDataGrounding']:.1%}"
+    )
+    print(
         f"Overall case accuracy:      "
         f"{summary['overallCaseAccuracy']:.1%}"
     )
@@ -276,6 +440,15 @@ def print_failures(results):
         if failure["executionFailures"]:
             print("Execution failures:", failure["executionFailures"])
 
+        if failure["toolFailureFailures"]:
+            print(
+                "Expected failure mismatches:",
+                failure["toolFailureFailures"],
+            )
+
+        if failure["groundingFailures"]:
+            print("Grounding failures:", failure["groundingFailures"])
+
         if failure.get("endpointError"):
             print("Endpoint error:", failure["endpointError"])
 
@@ -289,15 +462,28 @@ def main():
     started = datetime.now(timezone.utc)
     started_at = started.isoformat()
     timestamp = started.strftime("%Y%m%dT%H%M%S%fZ")
-    result_path = args.output_dir / f"tool-calling-{timestamp}.json"
+    result_path = args.output_dir / (
+        f"{args.dataset.stem}-{timestamp}.json"
+    )
     endpoint = f"{args.base_url.rstrip('/')}/api/evals/tool-calling"
+    fault_endpoint = (
+        f"{args.base_url.rstrip('/')}/api/simulation/tool-fault"
+    )
     results = []
 
     print(f"Running {len(cases)} cases against {endpoint}...")
 
     with requests.Session() as session:
         for index, case in enumerate(cases, start=1):
+            tool_fault = case.get("toolFault", "None")
             try:
+                fault_response = session.post(
+                    fault_endpoint,
+                    json={"fault": tool_fault},
+                    timeout=args.timeout,
+                )
+                fault_response.raise_for_status()
+
                 response = session.post(
                     endpoint,
                     json={"message": case["question"]},
@@ -317,6 +503,20 @@ def main():
                 result = failed_http_case(case, detail)
             except (requests.RequestException, ValueError) as error:
                 result = failed_http_case(case, error)
+            finally:
+                if tool_fault != "None":
+                    try:
+                        reset_response = session.post(
+                            fault_endpoint,
+                            json={"fault": "None"},
+                            timeout=args.timeout,
+                        )
+                        reset_response.raise_for_status()
+                    except requests.RequestException as reset_error:
+                        print(
+                            "  Warning: could not reset tool fault: "
+                            f"{reset_error}"
+                        )
 
             results.append(result)
             save_run(

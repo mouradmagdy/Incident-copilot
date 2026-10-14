@@ -14,10 +14,14 @@ public sealed class GetServiceMetricsTool : IAgentTool
     };
 
     private readonly IncidentCopilotDbContext _dbContext;
+    private readonly IToolFaultInjector _faultInjector;
 
-    public GetServiceMetricsTool(IncidentCopilotDbContext dbContext)
+    public GetServiceMetricsTool(
+        IncidentCopilotDbContext dbContext,
+        IToolFaultInjector faultInjector)
     {
         _dbContext = dbContext;
+        _faultInjector = faultInjector;
     }
 
     public string Name => "get_service_metrics";
@@ -54,6 +58,21 @@ public sealed class GetServiceMetricsTool : IAgentTool
         string argumentsJson,
         CancellationToken cancellationToken)
     {
+        if (_faultInjector.CurrentFault == ToolFault.MetricsTimeout)
+        {
+            await Task.Delay(
+                TimeSpan.FromSeconds(10),
+                cancellationToken);
+        }
+
+        if (_faultInjector.CurrentFault == ToolFault.MetricsFailure)
+        {
+            return new ToolResult(
+                false,
+                string.Empty,
+                $"Injected failure for tool '{Name}'.");
+        }
+
         GetServiceMetricsArguments? arguments;
 
         try

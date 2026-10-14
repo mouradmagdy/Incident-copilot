@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -12,6 +13,10 @@ namespace IncidentCopilot.Infrastructure.AI;
 
 public sealed class GroqLlmClient : ILlmClient
 {
+    private const int MaxRateLimitRetries = 5;
+    private static readonly TimeSpan DefaultRateLimitRetryDelay =
+        TimeSpan.FromSeconds(1);
+
     private readonly HttpClient _httpClient;
     private readonly GroqOptions _options;
     private readonly ILogger<GroqLlmClient> _logger;
@@ -56,12 +61,10 @@ public sealed class GroqLlmClient : ILlmClient
             ],
             false);
 
-        using var response = await _httpClient.PostAsJsonAsync(
-            "chat/completions",
+        using var response = await SendCompletionAsync(
             payload,
+            HttpCompletionOption.ResponseContentRead,
             cancellationToken);
-
-        await EnsureSuccessAsync(response, cancellationToken);
 
         var completion = await response.Content
             .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
@@ -101,12 +104,10 @@ public sealed class GroqLlmClient : ILlmClient
             "auto",
             false);
 
-        using var response = await _httpClient.PostAsJsonAsync(
-            "chat/completions",
+        using var response = await SendCompletionAsync(
             payload,
+            HttpCompletionOption.ResponseContentRead,
             cancellationToken);
-
-        await EnsureSuccessAsync(response, cancellationToken);
 
         var completion = await response.Content
             .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
@@ -226,12 +227,10 @@ public sealed class GroqLlmClient : ILlmClient
             CreateToolContinuationMessages(request),
             false);
 
-        using var response = await _httpClient.PostAsJsonAsync(
-            "chat/completions",
+        using var response = await SendCompletionAsync(
             payload,
+            HttpCompletionOption.ResponseContentRead,
             cancellationToken);
-
-        await EnsureSuccessAsync(response, cancellationToken);
 
         var completion = await response.Content
             .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
@@ -305,19 +304,10 @@ public sealed class GroqLlmClient : ILlmClient
         ChatCompletionRequest payload,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        using var httpRequest = new HttpRequestMessage(
-            HttpMethod.Post,
-            "chat/completions")
-        {
-            Content = JsonContent.Create(payload)
-        };
-
-        using var response = await _httpClient.SendAsync(
-            httpRequest,
+        using var response = await SendCompletionAsync(
+            payload,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
-
-        await EnsureSuccessAsync(response, cancellationToken);
 
         await using var stream = await response.Content
             .ReadAsStreamAsync(cancellationToken);
@@ -345,34 +335,100 @@ public sealed class GroqLlmClient : ILlmClient
         }
     }
 
-    private async Task EnsureSuccessAsync(
+    private async Task<HttpResponseMessage> SendCompletionAsync(
+        ChatCompletionRequest payload,
+        HttpCompletionOption completionOption,
+        CancellationToken cancellationToken)
+    {
+        for (var retry = 0; ; retry++)
+        {
+            using var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                "chat/completions")
+            {
+                Content = JsonContent.Create(payload)
+            };
+
+            var response = await _httpClient.SendAsync(
+                httpRequest,
+                completionOption,
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return response;
+            }
+
+            var exception = await CreateApiExceptionAsync(
+                response,
+                cancellationToken);
+
+            if (response.StatusCode != HttpStatusCode.TooManyRequests ||
+                retry >= MaxRateLimitRetries)
+            {
+                LogApiFailure(exception);
+                response.Dispose();
+                throw exception;
+            }
+
+            var delay = GetRetryDelay(response);
+
+            _logger.LogWarning(
+                "Groq rate limit reached. Retry {RetryNumber}/{MaxRetries} " +
+                "after {RetryDelayMs} ms. RequestId: {RequestId}; " +
+                "RateLimitHeaders: {@RateLimitHeaders}; Response: {ResponseBody}",
+                retry + 1,
+                MaxRateLimitRetries,
+                delay.TotalMilliseconds,
+                exception.RequestId,
+                exception.ResponseHeaders,
+                exception.ResponseBody);
+
+            response.Dispose();
+            await Task.Delay(delay, cancellationToken);
+        }
+    }
+
+    private static async Task<GroqApiException> CreateApiExceptionAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
-        if (response.IsSuccessStatusCode)
-        {
-            return;
-        }
-
         var responseBody = await response.Content
             .ReadAsStringAsync(cancellationToken);
-        var diagnosticHeaders = ReadDiagnosticHeaders(response);
-        var exception = new GroqApiException(
+
+        return new GroqApiException(
             response.StatusCode,
             responseBody,
-            diagnosticHeaders);
+            ReadDiagnosticHeaders(response));
+    }
 
+    private void LogApiFailure(GroqApiException exception)
+    {
         _logger.LogWarning(
-            "Groq request failed. StatusCode: {StatusCode}; " +
+            "Groq request failed after retries. StatusCode: {StatusCode}; " +
             "RetryAfter: {RetryAfter}; RequestId: {RequestId}; " +
             "RateLimitHeaders: {@RateLimitHeaders}; Response: {ResponseBody}",
-            (int)response.StatusCode,
+            (int?)exception.StatusCode,
             exception.RetryAfter,
             exception.RequestId,
-            diagnosticHeaders,
-            responseBody);
+            exception.ResponseHeaders,
+            exception.ResponseBody);
+    }
 
-        throw exception;
+    private static TimeSpan GetRetryDelay(HttpResponseMessage response)
+    {
+        if (response.Headers.RetryAfter?.Delta is { } delta)
+        {
+            return delta > TimeSpan.Zero ? delta : TimeSpan.Zero;
+        }
+
+        if (response.Headers.RetryAfter?.Date is { } date)
+        {
+            var delay = date - DateTimeOffset.UtcNow;
+            return delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
+        }
+
+        return DefaultRateLimitRetryDelay;
     }
 
     private static IReadOnlyDictionary<string, string> ReadDiagnosticHeaders(

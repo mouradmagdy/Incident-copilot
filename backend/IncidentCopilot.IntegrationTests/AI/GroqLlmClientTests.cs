@@ -393,11 +393,71 @@ public sealed class GroqLlmClientTests
     }
 
     [Fact]
-    public async Task GenerateAgentRoundStreamAsync_WhenRateLimited_ExposesGroqDetails()
+    public async Task GenerateAgentRoundStreamAsync_WhenRateLimited_RetriesAfterHeader()
     {
+        var requestCount = 0;
         using var handler = new StubHttpMessageHandler(
             (_, _) =>
             {
+                requestCount++;
+                if (requestCount == 1)
+                {
+                    var limitedResponse = new HttpResponseMessage(
+                        HttpStatusCode.TooManyRequests)
+                    {
+                        Content = new StringContent(
+                            """
+                            {
+                              "error": {
+                                "message": "Please try again.",
+                                "type": "tokens"
+                              }
+                            }
+                            """,
+                            Encoding.UTF8,
+                            "application/json")
+                    };
+                    limitedResponse.Headers.TryAddWithoutValidation(
+                        "retry-after",
+                        "0");
+                    return Task.FromResult(limitedResponse);
+                }
+
+                return Task.FromResult(
+                    new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(
+                            """
+                            data: {"choices":[{"delta":{"content":"Done."}}]}
+
+                            data: [DONE]
+
+                            """,
+                            Encoding.UTF8,
+                            "text/event-stream")
+                    });
+            });
+
+        using var httpClient = new HttpClient(handler);
+        var client = CreateClient(httpClient);
+
+        var events = await ReadAllAsync(
+            client.GenerateAgentRoundStreamAsync(
+                new LlmAgentRoundRequest("system", "user", [], []),
+                CancellationToken.None));
+
+        Assert.Equal(2, requestCount);
+        Assert.Equal("Done.", Assert.Single(events).Content);
+    }
+
+    [Fact]
+    public async Task GenerateAgentRoundStreamAsync_WhenRateLimitPersists_ExposesGroqDetails()
+    {
+        var requestCount = 0;
+        using var handler = new StubHttpMessageHandler(
+            (_, _) =>
+            {
+                requestCount++;
                 var response = new HttpResponseMessage(
                     HttpStatusCode.TooManyRequests)
                 {
@@ -413,7 +473,7 @@ public sealed class GroqLlmClientTests
                         Encoding.UTF8,
                         "application/json")
                 };
-                response.Headers.TryAddWithoutValidation("retry-after", "12");
+                response.Headers.TryAddWithoutValidation("retry-after", "0");
                 response.Headers.TryAddWithoutValidation(
                     "x-request-id",
                     "req_test_123");
@@ -443,7 +503,8 @@ public sealed class GroqLlmClientTests
                     CancellationToken.None)));
 
         Assert.Equal(HttpStatusCode.TooManyRequests, exception.StatusCode);
-        Assert.Equal("12", exception.RetryAfter);
+        Assert.Equal(6, requestCount);
+        Assert.Equal("0", exception.RetryAfter);
         Assert.Equal("req_test_123", exception.RequestId);
         Assert.Equal(
             "8000",

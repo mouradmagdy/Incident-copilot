@@ -4,6 +4,7 @@ using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
+using IncidentCopilot.Infrastructure.AI.Tools.GetRecentLogs;
 using IncidentCopilot.Infrastructure.AI.Tools.GetServiceMetrics;
 using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
@@ -42,6 +43,7 @@ builder.Services
 
 builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
 builder.Services.AddScoped<IAgentTool, GetServiceMetricsTool>();
+builder.Services.AddScoped<IAgentTool, GetRecentLogsTool>();
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
 builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
 builder.Services.AddScoped<IChatService, ChatService>();

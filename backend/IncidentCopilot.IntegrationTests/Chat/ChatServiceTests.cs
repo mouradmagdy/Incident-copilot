@@ -39,31 +39,42 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
-    public async Task AskStreamAsync_WhenToolIsRequested_ExecutesItAndContinuesLlmTurn()
+    public async Task AskStreamAsync_WhenSecondToolIsRequested_ExecutesMatchingTool()
     {
         const string arguments =
             "{\"serviceName\":\"OrderService\",\"minutes\":10}";
-        const string toolContent = "{\"averageLatencyMs\":42}";
+        const string toolContent =
+            "{\"logs\":[{\"level\":\"Error\",\"message\":\"Database timeout.\"}]}";
         var toolCall = new LlmToolCall(
             "call_123",
-            "get_service_metrics",
+            "get_recent_logs",
             arguments);
         var llmClient = new FakeLlmClient(
             new LlmTurnResponse(null, [toolCall]),
-            new LlmResponse("OrderService latency is currently 42 ms."));
-        var tool = new FakeAgentTool(
+            new LlmResponse("OrderService has recent error logs."));
+        var metricsTool = new FakeAgentTool("get_service_metrics");
+        var recentLogsTool = new FakeAgentTool(
+            "get_recent_logs",
             new ToolResult(true, toolContent));
-        var service = CreateService(llmClient, tool);
+        var service = CreateService(
+            llmClient,
+            metricsTool,
+            recentLogsTool);
 
         var response = await service.AskStreamAsync(
-            "What is the current OrderService latency?",
+            "Show me the recent OrderService logs.",
             CancellationToken.None);
 
         Assert.Equal(
-            ["OrderService latency is currently 42 ms."],
+            ["OrderService has recent error logs."],
             await ReadAllAsync(response.Content));
-        Assert.Equal(1, tool.ExecutionCount);
-        Assert.Equal(arguments, tool.LastArgumentsJson);
+        Assert.Equal(0, metricsTool.ExecutionCount);
+        Assert.Equal(1, recentLogsTool.ExecutionCount);
+        Assert.Equal(arguments, recentLogsTool.LastArgumentsJson);
+        Assert.NotNull(llmClient.InitialRequest);
+        Assert.Equal(
+            ["get_service_metrics", "get_recent_logs"],
+            llmClient.InitialRequest.Tools.Select(tool => tool.Name));
         Assert.NotNull(llmClient.ContinuationRequest);
         Assert.Equal(toolCall, llmClient.ContinuationRequest.ToolCall);
         Assert.Equal(toolContent, llmClient.ContinuationRequest.ToolResult);
@@ -71,12 +82,12 @@ public sealed class ChatServiceTests
 
     private static ChatService CreateService(
         ILlmClient llmClient,
-        IAgentTool tool)
+        params IAgentTool[] tools)
     {
         return new ChatService(
             new EmptyKnowledgeRetriever(),
             llmClient,
-            tool,
+            tools,
             NullLogger<ChatService>.Instance,
             Options.Create(new ChatDiagnosticsOptions()));
     }
@@ -108,12 +119,15 @@ public sealed class ChatServiceTests
     {
         private readonly ToolResult _result;
 
-        public FakeAgentTool(ToolResult? result = null)
+        public FakeAgentTool(
+            string name = "get_service_metrics",
+            ToolResult? result = null)
         {
+            Name = name;
             _result = result ?? new ToolResult(true, "{}");
         }
 
-        public string Name => "get_service_metrics";
+        public string Name { get; }
 
         public ToolDefinition Definition => new(
             Name,

@@ -22,12 +22,12 @@ public sealed class ChatService : IChatService
     private readonly ILlmClient _llmClient;
     private readonly ILogger<ChatService> _logger;
     private readonly ChatDiagnosticsOptions _diagnosticsOptions;
-    private readonly IAgentTool _agentTool;
+    private readonly IReadOnlyDictionary<string, IAgentTool> _agentTools;
 
     public ChatService(
         IKnowledgeRetriever retriever,
         ILlmClient llmClient,
-        IAgentTool agentTool,
+        IEnumerable<IAgentTool> agentTools,
         ILogger<ChatService> logger,
         IOptions<ChatDiagnosticsOptions> diagnosticsOptions)
     {
@@ -35,7 +35,15 @@ public sealed class ChatService : IChatService
         _llmClient = llmClient;
         _logger = logger;
         _diagnosticsOptions = diagnosticsOptions.Value;
-        _agentTool = agentTool;
+        _agentTools = agentTools.ToDictionary(
+            tool => tool.Name,
+            StringComparer.Ordinal);
+
+        if (_agentTools.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "At least one agent tool must be registered.");
+        }
     }
 
     public async Task<ChatStreamResponse> AskStreamAsync(
@@ -114,7 +122,6 @@ public sealed class ChatService : IChatService
 
         try
         {
-            var tool = _agentTool;
             LlmToolCall? requestedToolCall = null;
             var streamedContent = false;
 
@@ -123,7 +130,9 @@ public sealed class ChatService : IChatService
                     new LlmToolRequest(
                         systemPrompt,
                         message,
-                        [tool.Definition]),
+                        _agentTools.Values
+                            .Select(tool => tool.Definition)
+                            .ToArray()),
                     cancellationToken)
                 .WithCancellation(cancellationToken))
             {
@@ -167,10 +176,9 @@ public sealed class ChatService : IChatService
                     "The LLM returned both message content and a tool call in the same turn.");
             }
 
-            if (!string.Equals(
+            if (!_agentTools.TryGetValue(
                     requestedToolCall.Name,
-                    tool.Definition.Name,
-                    StringComparison.Ordinal))
+                    out var requestedTool))
             {
                 throw new InvalidOperationException(
                     $"Unknown tool requested: {requestedToolCall.Name}");
@@ -186,7 +194,7 @@ public sealed class ChatService : IChatService
                 requestedToolCall.Name,
                 FormatJson(requestedToolCall.ArgumentsJson));
 
-            var toolResult = await tool.ExecuteAsync(
+            var toolResult = await requestedTool.ExecuteAsync(
                 requestedToolCall.ArgumentsJson,
                 cancellationToken);
 

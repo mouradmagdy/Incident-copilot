@@ -14,6 +14,10 @@ public interface ILlmClient
         LlmToolRequest request,
         CancellationToken cancellationToken);
 
+    IAsyncEnumerable<LlmStreamEvent> GenerateAgentRoundStreamAsync(
+        LlmAgentRoundRequest request,
+        CancellationToken cancellationToken);
+
     Task<LlmResponse> GenerateAfterToolAsync(
         LlmToolContinuationRequest request,
         CancellationToken cancellationToken);

@@ -114,6 +114,22 @@ public sealed class GroqLlmClient : ILlmClient
         LlmToolRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        await foreach (var streamEvent in GenerateAgentRoundStreamAsync(
+            new LlmAgentRoundRequest(
+                request.SystemPrompt,
+                request.UserMessage,
+                request.Tools,
+                []),
+            cancellationToken))
+        {
+            yield return streamEvent;
+        }
+    }
+
+    public async IAsyncEnumerable<LlmStreamEvent> GenerateAgentRoundStreamAsync(
+        LlmAgentRoundRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
         var tools = request.Tools
             .Select(tool => new ChatTool(
                 "function",
@@ -125,10 +141,7 @@ public sealed class GroqLlmClient : ILlmClient
 
         var payload = new ChatCompletionRequest(
             _options.Model,
-            [
-                new ChatMessage("system", request.SystemPrompt),
-                new ChatMessage("user", request.UserMessage)
-            ],
+            CreateAgentMessages(request),
             true,
             tools,
             "auto",
@@ -316,15 +329,36 @@ public sealed class GroqLlmClient : ILlmClient
         }
     }
 
+    private static IReadOnlyList<ChatMessage> CreateAgentMessages(
+        LlmAgentRoundRequest request)
+    {
+        var messages = new List<ChatMessage>(
+            2 + (request.ToolExchanges.Count * 2))
+        {
+            new("system", request.SystemPrompt),
+            new("user", request.UserMessage)
+        };
+
+        foreach (var exchange in request.ToolExchanges)
+        {
+            messages.Add(new ChatMessage(
+                "assistant",
+                null,
+                [CreateChatToolCall(exchange.ToolCall)]));
+            messages.Add(new ChatMessage(
+                "tool",
+                exchange.ToolResult,
+                ToolCallId: exchange.ToolCall.Id,
+                Name: exchange.ToolCall.Name));
+        }
+
+        return messages;
+    }
+
     private static IReadOnlyList<ChatMessage> CreateToolContinuationMessages(
         LlmToolContinuationRequest request)
     {
-        var toolCall = new ChatToolCall(
-            request.ToolCall.Id,
-            "function",
-            new ChatToolCallFunction(
-                request.ToolCall.Name,
-                request.ToolCall.ArgumentsJson));
+        var toolCall = CreateChatToolCall(request.ToolCall);
 
         return
         [
@@ -337,6 +371,16 @@ public sealed class GroqLlmClient : ILlmClient
                 ToolCallId: request.ToolCall.Id,
                 Name: request.ToolCall.Name)
         ];
+    }
+
+    private static ChatToolCall CreateChatToolCall(LlmToolCall toolCall)
+    {
+        return new ChatToolCall(
+            toolCall.Id,
+            "function",
+            new ChatToolCallFunction(
+                toolCall.Name,
+                toolCall.ArgumentsJson));
     }
 
     private sealed record ChatCompletionRequest(

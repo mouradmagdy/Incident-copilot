@@ -238,6 +238,103 @@ public sealed class GroqLlmClientTests
     }
 
     [Fact]
+    public async Task GenerateAgentRoundStreamAsync_PostsFullToolHistory()
+    {
+        using var handler = new StubHttpMessageHandler(
+            async (request, cancellationToken) =>
+            {
+                var json = await request.Content!
+                    .ReadAsStringAsync(cancellationToken);
+                using var document = JsonDocument.Parse(json);
+                var root = document.RootElement;
+
+                Assert.True(root.GetProperty("stream").GetBoolean());
+                Assert.Equal("auto", root.GetProperty("tool_choice").GetString());
+                Assert.False(root.GetProperty("parallel_tool_calls").GetBoolean());
+                Assert.Equal(2, root.GetProperty("tools").GetArrayLength());
+
+                var messages = root.GetProperty("messages");
+                Assert.Equal(6, messages.GetArrayLength());
+                Assert.Equal("system", messages[0].GetProperty("role").GetString());
+                Assert.Equal("user", messages[1].GetProperty("role").GetString());
+                Assert.Equal("assistant", messages[2].GetProperty("role").GetString());
+                Assert.Equal(
+                    "get_service_metrics",
+                    messages[2]
+                        .GetProperty("tool_calls")[0]
+                        .GetProperty("function")
+                        .GetProperty("name")
+                        .GetString());
+                Assert.Equal("tool", messages[3].GetProperty("role").GetString());
+                Assert.Equal(
+                    "call_metrics",
+                    messages[3].GetProperty("tool_call_id").GetString());
+                Assert.Equal("assistant", messages[4].GetProperty("role").GetString());
+                Assert.Equal(
+                    "get_recent_logs",
+                    messages[4]
+                        .GetProperty("tool_calls")[0]
+                        .GetProperty("function")
+                        .GetProperty("name")
+                        .GetString());
+                Assert.Equal("tool", messages[5].GetProperty("role").GetString());
+                Assert.Equal(
+                    "call_logs",
+                    messages[5].GetProperty("tool_call_id").GetString());
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        data: {"choices":[{"delta":{"content":"Investigation complete."}}]}
+
+                        data: [DONE]
+
+                        """,
+                        Encoding.UTF8,
+                        "text/event-stream")
+                };
+            });
+
+        using var httpClient = new HttpClient(handler);
+        var client = CreateClient(httpClient);
+        var events = await ReadAllAsync(
+            client.GenerateAgentRoundStreamAsync(
+                new LlmAgentRoundRequest(
+                    "system",
+                    "Investigate OrderService.",
+                    [
+                        new ToolDefinition(
+                            "get_service_metrics",
+                            "Gets metrics.",
+                            new { type = "object" }),
+                        new ToolDefinition(
+                            "get_recent_logs",
+                            "Gets logs.",
+                            new { type = "object" })
+                    ],
+                    [
+                        new LlmToolExchange(
+                            new LlmToolCall(
+                                "call_metrics",
+                                "get_service_metrics",
+                                "{\"serviceName\":\"OrderService\"}"),
+                            "{\"averageLatencyMs\":1800}"),
+                        new LlmToolExchange(
+                            new LlmToolCall(
+                                "call_logs",
+                                "get_recent_logs",
+                                "{\"serviceName\":\"OrderService\"}"),
+                            "{\"logs\":[{\"message\":\"Database timeout.\"}]}")
+                    ]),
+                CancellationToken.None));
+
+        var streamEvent = Assert.Single(events);
+        Assert.Equal("Investigation complete.", streamEvent.Content);
+        Assert.Null(streamEvent.ToolCall);
+    }
+
+    [Fact]
     public async Task GenerateAfterToolStreamAsync_ReturnsContentDeltas()
     {
         using var handler = new StubHttpMessageHandler(

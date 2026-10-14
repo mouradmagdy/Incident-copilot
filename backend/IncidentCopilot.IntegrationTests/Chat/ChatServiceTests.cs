@@ -28,13 +28,13 @@ public sealed class ChatServiceTests
             [refusal],
             await ReadAllAsync(response.Content));
         Assert.Empty(response.Sources);
-        Assert.NotNull(llmClient.InitialRequest);
+        var initialRequest = Assert.Single(llmClient.AgentRoundRequests);
         Assert.Contains(
             "No relevant internal documentation was found.",
-            llmClient.InitialRequest.SystemPrompt);
+            initialRequest.SystemPrompt);
         Assert.Contains(
             "Your scope is limited to the monitored",
-            llmClient.InitialRequest.SystemPrompt);
+            initialRequest.SystemPrompt);
         Assert.Equal(0, tool.ExecutionCount);
     }
 
@@ -51,7 +51,7 @@ public sealed class ChatServiceTests
             arguments);
         var llmClient = new FakeLlmClient(
             new LlmTurnResponse(null, [toolCall]),
-            new LlmResponse("OrderService has recent error logs."));
+            new LlmTurnResponse("OrderService has recent error logs.", []));
         var metricsTool = new FakeAgentTool("get_service_metrics");
         var recentLogsTool = new FakeAgentTool(
             "get_recent_logs",
@@ -71,13 +71,91 @@ public sealed class ChatServiceTests
         Assert.Equal(0, metricsTool.ExecutionCount);
         Assert.Equal(1, recentLogsTool.ExecutionCount);
         Assert.Equal(arguments, recentLogsTool.LastArgumentsJson);
-        Assert.NotNull(llmClient.InitialRequest);
+        Assert.Equal(2, llmClient.AgentRoundRequests.Count);
         Assert.Equal(
             ["get_service_metrics", "get_recent_logs"],
-            llmClient.InitialRequest.Tools.Select(tool => tool.Name));
-        Assert.NotNull(llmClient.ContinuationRequest);
-        Assert.Equal(toolCall, llmClient.ContinuationRequest.ToolCall);
-        Assert.Equal(toolContent, llmClient.ContinuationRequest.ToolResult);
+            llmClient.AgentRoundRequests[0].Tools.Select(tool => tool.Name));
+        var exchange = Assert.Single(
+            llmClient.AgentRoundRequests[1].ToolExchanges);
+        Assert.Equal(toolCall, exchange.ToolCall);
+        Assert.Equal(toolContent, exchange.ToolResult);
+    }
+
+    [Fact]
+    public async Task AskStreamAsync_MultiStepLoop_CanCallTwoToolsBeforeAnswering()
+    {
+        var metricsCall = new LlmToolCall(
+            "call_metrics",
+            "get_service_metrics",
+            "{\"serviceName\":\"OrderService\",\"minutes\":15}");
+        var logsCall = new LlmToolCall(
+            "call_logs",
+            "get_recent_logs",
+            "{\"serviceName\":\"OrderService\",\"minutes\":15}");
+        var llmClient = new FakeLlmClient(
+            new LlmTurnResponse(null, [metricsCall]),
+            new LlmTurnResponse(null, [logsCall]),
+            new LlmTurnResponse(
+                "High latency correlates with database timeout logs.",
+                []));
+        var metricsTool = new FakeAgentTool(
+            "get_service_metrics",
+            new ToolResult(true, "{\"averageLatencyMs\":1800}"));
+        var logsTool = new FakeAgentTool(
+            "get_recent_logs",
+            new ToolResult(true, "{\"logs\":[{\"message\":\"Database timeout.\"}]}"));
+        var service = CreateService(llmClient, metricsTool, logsTool);
+
+        var response = await service.AskStreamAsync(
+            "Investigate the current OrderService latency and errors.",
+            CancellationToken.None);
+
+        Assert.Equal(
+            ["High latency correlates with database timeout logs."],
+            await ReadAllAsync(response.Content));
+        Assert.Equal(1, metricsTool.ExecutionCount);
+        Assert.Equal(1, logsTool.ExecutionCount);
+        Assert.Equal(3, llmClient.AgentRoundRequests.Count);
+        Assert.Empty(llmClient.AgentRoundRequests[0].ToolExchanges);
+        Assert.Single(llmClient.AgentRoundRequests[1].ToolExchanges);
+        Assert.Equal(2, llmClient.AgentRoundRequests[2].ToolExchanges.Count);
+        Assert.Equal(
+            ["get_service_metrics", "get_recent_logs"],
+            llmClient.AgentRoundRequests[2]
+                .ToolExchanges
+                .Select(exchange => exchange.ToolCall.Name));
+    }
+
+    [Fact]
+    public async Task AskStreamAsync_WhenFiveRoundsRequestTools_StopsWithoutSixthRound()
+    {
+        var roundResponses = Enumerable.Range(1, 5)
+            .Select(round => new LlmTurnResponse(
+                null,
+                [
+                    new LlmToolCall(
+                        $"call_{round}",
+                        "get_service_metrics",
+                        "{\"serviceName\":\"OrderService\"}")
+                ]))
+            .ToArray();
+        var llmClient = new FakeLlmClient(roundResponses);
+        var tool = new FakeAgentTool();
+        var service = CreateService(llmClient, tool);
+
+        var response = await service.AskStreamAsync(
+            "Keep investigating OrderService.",
+            CancellationToken.None);
+
+        Assert.Equal(
+            ["I couldn't complete the investigation within the maximum of 5 agent rounds."],
+            await ReadAllAsync(response.Content));
+        Assert.Equal(5, llmClient.AgentRoundRequests.Count);
+        Assert.Equal(4, tool.ExecutionCount);
+        Assert.Equal(
+            [0, 1, 2, 3, 4],
+            llmClient.AgentRoundRequests
+                .Select(request => request.ToolExchanges.Count));
     }
 
     private static ChatService CreateService(
@@ -150,20 +228,14 @@ public sealed class ChatServiceTests
 
     private sealed class FakeLlmClient : ILlmClient
     {
-        private readonly LlmTurnResponse _initialResponse;
-        private readonly LlmResponse? _continuationResponse;
+        private readonly Queue<LlmTurnResponse> _roundResponses;
 
-        public FakeLlmClient(
-            LlmTurnResponse initialResponse,
-            LlmResponse? continuationResponse = null)
+        public FakeLlmClient(params LlmTurnResponse[] roundResponses)
         {
-            _initialResponse = initialResponse;
-            _continuationResponse = continuationResponse;
+            _roundResponses = new Queue<LlmTurnResponse>(roundResponses);
         }
 
-        public LlmToolRequest? InitialRequest { get; private set; }
-
-        public LlmToolContinuationRequest? ContinuationRequest { get; private set; }
+        public List<LlmAgentRoundRequest> AgentRoundRequests { get; } = [];
 
         public Task<LlmResponse> GenerateAsync(
             LlmRequest request,
@@ -176,24 +248,32 @@ public sealed class ChatServiceTests
             LlmToolRequest request,
             CancellationToken cancellationToken)
         {
-            InitialRequest = request;
-            return Task.FromResult(_initialResponse);
+            throw new NotSupportedException();
         }
 
-        public async IAsyncEnumerable<LlmStreamEvent> GenerateWithToolsStreamAsync(
+        public IAsyncEnumerable<LlmStreamEvent> GenerateWithToolsStreamAsync(
             LlmToolRequest request,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public async IAsyncEnumerable<LlmStreamEvent> GenerateAgentRoundStreamAsync(
+            LlmAgentRoundRequest request,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            InitialRequest = request;
+            AgentRoundRequests.Add(request);
+            var response = _roundResponses.Count > 0
+                ? _roundResponses.Dequeue()
+                : throw new InvalidOperationException(
+                    "No agent round response was configured.");
 
-            if (!string.IsNullOrEmpty(_initialResponse.Content))
+            if (!string.IsNullOrEmpty(response.Content))
             {
-                yield return new LlmStreamEvent(
-                    _initialResponse.Content,
-                    null);
+                yield return new LlmStreamEvent(response.Content, null);
             }
 
-            foreach (var toolCall in _initialResponse.ToolCalls)
+            foreach (var toolCall in response.ToolCalls)
             {
                 yield return new LlmStreamEvent(null, toolCall);
             }
@@ -205,24 +285,14 @@ public sealed class ChatServiceTests
             LlmToolContinuationRequest request,
             CancellationToken cancellationToken)
         {
-            ContinuationRequest = request;
-            return Task.FromResult(
-                _continuationResponse ??
-                throw new InvalidOperationException(
-                    "No continuation response was configured."));
+            throw new NotSupportedException();
         }
 
-        public async IAsyncEnumerable<string> GenerateAfterToolStreamAsync(
+        public IAsyncEnumerable<string> GenerateAfterToolStreamAsync(
             LlmToolContinuationRequest request,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+            CancellationToken cancellationToken)
         {
-            ContinuationRequest = request;
-            yield return (
-                _continuationResponse ??
-                throw new InvalidOperationException(
-                    "No continuation response was configured."))
-                .Content;
-            await Task.CompletedTask;
+            throw new NotSupportedException();
         }
 
         public async IAsyncEnumerable<string> GenerateStreamAsync(

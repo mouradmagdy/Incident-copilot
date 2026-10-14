@@ -13,6 +13,9 @@ public sealed class ChatService : IChatService
 {
     private const int TopK = 4;
     private const double MaxDistance = 0.75;
+    private const int MaxAgentRounds = 5;
+    private const string AgentRoundLimitMessage =
+        "I couldn't complete the investigation within the maximum of 5 agent rounds.";
     private static readonly JsonSerializerOptions IndentedJsonOptions = new()
     {
         WriteIndented = true
@@ -122,105 +125,132 @@ public sealed class ChatService : IChatService
 
         try
         {
-            LlmToolCall? requestedToolCall = null;
-            var streamedContent = false;
+            var toolDefinitions = _agentTools.Values
+                .Select(tool => tool.Definition)
+                .ToArray();
+            var toolExchanges = new List<LlmToolExchange>();
 
-            await foreach (var streamEvent in _llmClient
-                .GenerateWithToolsStreamAsync(
-                    new LlmToolRequest(
-                        systemPrompt,
-                        message,
-                        _agentTools.Values
-                            .Select(tool => tool.Definition)
-                            .ToArray()),
-                    cancellationToken)
-                .WithCancellation(cancellationToken))
+            for (var round = 1; round <= MaxAgentRounds; round++)
             {
-                if (!string.IsNullOrEmpty(streamEvent.Content))
-                {
-                    streamedContent = true;
-                    yield return streamEvent.Content;
-                }
+                _logger.LogInformation(
+                    "Agent round {AgentRound}/{MaxAgentRounds} started. Completed tool calls: {CompletedToolCallCount}.",
+                    round,
+                    MaxAgentRounds,
+                    toolExchanges.Count);
 
-                if (streamEvent.ToolCall is not null)
+                LlmToolCall? requestedToolCall = null;
+                var streamedContent = false;
+
+                await foreach (var streamEvent in _llmClient
+                    .GenerateAgentRoundStreamAsync(
+                        new LlmAgentRoundRequest(
+                            systemPrompt,
+                            message,
+                            toolDefinitions,
+                            toolExchanges.ToArray()),
+                        cancellationToken)
+                    .WithCancellation(cancellationToken))
                 {
-                    if (requestedToolCall is not null)
+                    if (!string.IsNullOrEmpty(streamEvent.Content))
                     {
-                        throw new InvalidOperationException(
-                            "The LLM requested multiple tool calls, but this chat flow supports one call per turn.");
+                        streamedContent = true;
+                        yield return streamEvent.Content;
                     }
 
-                    requestedToolCall = streamEvent.ToolCall;
-                }
-            }
+                    if (streamEvent.ToolCall is not null)
+                    {
+                        if (requestedToolCall is not null)
+                        {
+                            throw new InvalidOperationException(
+                                "The LLM requested multiple tool calls in one round, but parallel tool calls are disabled.");
+                        }
 
-            if (requestedToolCall is null)
-            {
-                if (!streamedContent)
+                        requestedToolCall = streamEvent.ToolCall;
+                    }
+                }
+
+                if (requestedToolCall is null)
+                {
+                    if (!streamedContent)
+                    {
+                        throw new InvalidOperationException(
+                            "The LLM returned neither message content nor a tool call.");
+                    }
+
+                    if (toolExchanges.Count > 0)
+                    {
+                        _logger.LogInformation(
+                            "Response path: agent loop completed in {AgentRound} round(s) after {ToolCallCount} tool call(s).",
+                            round,
+                            toolExchanges.Count);
+                    }
+                    else
+                    {
+                        _logger.LogInformation(
+                            hasRelevantDocumentation
+                                ? "Response path: RAG. No tool was requested."
+                                : "Response path: scope refusal. No RAG context or tool call was available.");
+                    }
+
+                    yield break;
+                }
+
+                if (streamedContent)
                 {
                     throw new InvalidOperationException(
-                        "The LLM returned neither message content nor a tool call.");
+                        "The LLM returned both message content and a tool call in the same round.");
+                }
+
+                if (round == MaxAgentRounds)
+                {
+                    _logger.LogWarning(
+                        "Agent stopped after reaching the maximum of {MaxAgentRounds} rounds. The final requested tool {ToolName} was not executed.",
+                        MaxAgentRounds,
+                        requestedToolCall.Name);
+                    yield return AgentRoundLimitMessage;
+                    yield break;
+                }
+
+                if (!_agentTools.TryGetValue(
+                        requestedToolCall.Name,
+                        out var requestedTool))
+                {
+                    throw new InvalidOperationException(
+                        $"Unknown tool requested: {requestedToolCall.Name}");
                 }
 
                 _logger.LogInformation(
-                    hasRelevantDocumentation
-                        ? "Response path: RAG. No tool was requested."
-                        : "Response path: scope refusal. No RAG context or tool call was available.");
+                    """
+                    Agent round: {AgentRound}/{MaxAgentRounds}
+                    Tool requested: {ToolName}
 
-                yield break;
-            }
-
-            if (streamedContent)
-            {
-                throw new InvalidOperationException(
-                    "The LLM returned both message content and a tool call in the same turn.");
-            }
-
-            if (!_agentTools.TryGetValue(
+                    Arguments:
+                    {ToolArguments}
+                    """,
+                    round,
+                    MaxAgentRounds,
                     requestedToolCall.Name,
-                    out var requestedTool))
-            {
-                throw new InvalidOperationException(
-                    $"Unknown tool requested: {requestedToolCall.Name}");
-            }
+                    FormatJson(requestedToolCall.ArgumentsJson));
 
-            _logger.LogInformation(
-                """
-                Tool requested: {ToolName}
+                var toolResult = await requestedTool.ExecuteAsync(
+                    requestedToolCall.ArgumentsJson,
+                    cancellationToken);
 
-                Arguments:
-                {ToolArguments}
-                """,
-                requestedToolCall.Name,
-                FormatJson(requestedToolCall.ArgumentsJson));
+                _logger.LogInformation(
+                    "Tool completed: {ToolName}. Success: {ToolSucceeded}.",
+                    requestedToolCall.Name,
+                    toolResult.Success);
 
-            var toolResult = await requestedTool.ExecuteAsync(
-                requestedToolCall.ArgumentsJson,
-                cancellationToken);
+                var serializedToolResult = toolResult.Success
+                    ? toolResult.Content
+                    : JsonSerializer.Serialize(new
+                    {
+                        error = toolResult.Error ?? "The tool failed without an error message."
+                    });
 
-            _logger.LogInformation(
-                "Tool completed: {ToolName}. Success: {ToolSucceeded}.",
-                requestedToolCall.Name,
-                toolResult.Success);
-
-            var serializedToolResult = toolResult.Success
-                ? toolResult.Content
-                : JsonSerializer.Serialize(new
-                {
-                    error = toolResult.Error ?? "The tool failed without an error message."
-                });
-
-            await foreach (var content in _llmClient
-                .GenerateAfterToolStreamAsync(
-                    new LlmToolContinuationRequest(
-                        systemPrompt,
-                        message,
-                        requestedToolCall,
-                        serializedToolResult),
-                    cancellationToken)
-                .WithCancellation(cancellationToken))
-            {
-                yield return content;
+                toolExchanges.Add(new LlmToolExchange(
+                    requestedToolCall,
+                    serializedToolResult));
             }
         }
         finally
@@ -323,6 +353,10 @@ public sealed class ChatService : IChatService
             You have access to tools for obtaining live system information.
 
             Use tools when the user's question requires current runtime data.
+
+            You may use tools over multiple rounds. After each tool result,
+            decide whether another tool is needed. When you have enough
+            information, answer the user instead of requesting another tool.
 
             Never claim current metrics, logs, incidents, or system state unless
             that information was provided by a tool in this conversation.

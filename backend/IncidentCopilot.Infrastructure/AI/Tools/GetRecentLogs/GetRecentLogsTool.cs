@@ -1,6 +1,7 @@
 using System.Text.Json;
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Core.AI;
+using IncidentCopilot.Core.Enums;
 using IncidentCopilot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,6 +54,20 @@ public sealed class GetRecentLogsTool : IAgentTool
                     minimum = 1,
                     maximum = 100,
                     @default = 20
+                },
+                minimumLevel = new
+                {
+                    type = "string",
+                    description =
+                        "Optional minimum severity to include.",
+                    @enum = new[]
+                    {
+                        "Debug",
+                        "Information",
+                        "Warning",
+                        "Error",
+                        "Critical"
+                    }
                 }
             },
             required = new[] { "serviceName" },
@@ -91,12 +106,32 @@ public sealed class GetRecentLogsTool : IAgentTool
         var minutes = Math.Clamp(arguments.Minutes, 1, 60);
         var maxResults = Math.Clamp(arguments.MaxResults, 1, 100);
         var cutoff = DateTime.UtcNow.AddMinutes(-minutes);
+        LogLevel? minimumLevel = null;
+
+        if (!string.IsNullOrWhiteSpace(arguments.MinimumLevel))
+        {
+            if (!Enum.TryParse<LogLevel>(
+                    arguments.MinimumLevel,
+                    ignoreCase: true,
+                    out var parsedMinimumLevel)
+                || !Enum.IsDefined(parsedMinimumLevel))
+            {
+                return new ToolResult(
+                    false,
+                    string.Empty,
+                    $"Unknown minimumLevel '{arguments.MinimumLevel}'.");
+            }
+
+            minimumLevel = parsedMinimumLevel;
+        }
 
         var logs = await _dbContext.LogEvents
             .AsNoTracking()
             .Where(logEvent =>
                 logEvent.Service.Name == arguments.ServiceName &&
-                logEvent.TimestampUtc >= cutoff)
+                logEvent.TimestampUtc >= cutoff &&
+                (!minimumLevel.HasValue ||
+                 logEvent.Level >= minimumLevel.Value))
             .OrderByDescending(logEvent => logEvent.TimestampUtc)
             .Take(maxResults)
             .Select(logEvent => new
@@ -109,18 +144,10 @@ public sealed class GetRecentLogsTool : IAgentTool
             })
             .ToListAsync(cancellationToken);
 
-        if (logs.Count == 0)
-        {
-            return new ToolResult(
-                false,
-                string.Empty,
-                $"No logs were found for service '{arguments.ServiceName}' " +
-                $"in the last {minutes} minute(s).");
-        }
-
         var response = new RecentLogsToolResponse(
             arguments.ServiceName,
             minutes,
+            minimumLevel?.ToString(),
             logs.Select(logEvent => new RecentLogEntry(
                     logEvent.TimestampUtc,
                     logEvent.Level.ToString(),

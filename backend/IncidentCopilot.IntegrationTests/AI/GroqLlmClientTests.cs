@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace IncidentCopilot.IntegrationTests.AI;
@@ -391,6 +392,69 @@ public sealed class GroqLlmClientTests
                 cancellation.Token));
     }
 
+    [Fact]
+    public async Task GenerateAgentRoundStreamAsync_WhenRateLimited_ExposesGroqDetails()
+    {
+        using var handler = new StubHttpMessageHandler(
+            (_, _) =>
+            {
+                var response = new HttpResponseMessage(
+                    HttpStatusCode.TooManyRequests)
+                {
+                    Content = new StringContent(
+                        """
+                        {
+                          "error": {
+                            "message": "Rate limit reached for tokens per minute.",
+                            "type": "tokens"
+                          }
+                        }
+                        """,
+                        Encoding.UTF8,
+                        "application/json")
+                };
+                response.Headers.TryAddWithoutValidation("retry-after", "12");
+                response.Headers.TryAddWithoutValidation(
+                    "x-request-id",
+                    "req_test_123");
+                response.Headers.TryAddWithoutValidation(
+                    "x-ratelimit-limit-tokens",
+                    "8000");
+                response.Headers.TryAddWithoutValidation(
+                    "x-ratelimit-remaining-tokens",
+                    "0");
+                response.Headers.TryAddWithoutValidation(
+                    "x-ratelimit-reset-tokens",
+                    "12s");
+                return Task.FromResult(response);
+            });
+
+        using var httpClient = new HttpClient(handler);
+        var client = CreateClient(httpClient);
+
+        var exception = await Assert.ThrowsAsync<GroqApiException>(
+            async () => await ReadAllAsync(
+                client.GenerateAgentRoundStreamAsync(
+                    new LlmAgentRoundRequest(
+                        "system",
+                        "user",
+                        [],
+                        []),
+                    CancellationToken.None)));
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, exception.StatusCode);
+        Assert.Equal("12", exception.RetryAfter);
+        Assert.Equal("req_test_123", exception.RequestId);
+        Assert.Equal(
+            "8000",
+            exception.ResponseHeaders["x-ratelimit-limit-tokens"]);
+        Assert.Equal(
+            "0",
+            exception.ResponseHeaders["x-ratelimit-remaining-tokens"]);
+        Assert.Contains("tokens per minute", exception.ResponseBody);
+        Assert.Contains("x-ratelimit-reset-tokens=12s", exception.Message);
+    }
+
     private static GroqLlmClient CreateClient(HttpClient httpClient)
     {
         return new GroqLlmClient(
@@ -400,7 +464,8 @@ public sealed class GroqLlmClientTests
                 ApiKey = "test-api-key",
                 BaseUrl = "https://api.groq.test/openai/v1",
                 Model = "openai/gpt-oss-120b"
-            }));
+            }),
+            NullLogger<GroqLlmClient>.Instance);
     }
 
     private static async Task<IReadOnlyList<T>> ReadAllAsync<T>(

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using IncidentCopilot.Core.AI;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace IncidentCopilot.Infrastructure.AI;
@@ -13,13 +14,28 @@ public sealed class GroqLlmClient : ILlmClient
 {
     private readonly HttpClient _httpClient;
     private readonly GroqOptions _options;
+    private readonly ILogger<GroqLlmClient> _logger;
+
+    private static readonly string[] DiagnosticHeaderNames =
+    [
+        "retry-after",
+        "x-request-id",
+        "x-ratelimit-limit-requests",
+        "x-ratelimit-limit-tokens",
+        "x-ratelimit-remaining-requests",
+        "x-ratelimit-remaining-tokens",
+        "x-ratelimit-reset-requests",
+        "x-ratelimit-reset-tokens"
+    ];
 
     public GroqLlmClient(
         HttpClient httpClient,
-        IOptions<GroqOptions> options)
+        IOptions<GroqOptions> options,
+        ILogger<GroqLlmClient> logger)
     {
         _httpClient = httpClient;
         _options = options.Value;
+        _logger = logger;
 
         _httpClient.BaseAddress = new Uri(
             $"{_options.BaseUrl.TrimEnd('/')}/",
@@ -45,7 +61,7 @@ public sealed class GroqLlmClient : ILlmClient
             payload,
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
 
         var completion = await response.Content
             .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
@@ -90,7 +106,7 @@ public sealed class GroqLlmClient : ILlmClient
             payload,
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
 
         var completion = await response.Content
             .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
@@ -215,7 +231,7 @@ public sealed class GroqLlmClient : ILlmClient
             payload,
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
 
         var completion = await response.Content
             .ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
@@ -301,7 +317,7 @@ public sealed class GroqLlmClient : ILlmClient
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
 
         await using var stream = await response.Content
             .ReadAsStreamAsync(cancellationToken);
@@ -327,6 +343,54 @@ public sealed class GroqLlmClient : ILlmClient
                 yield return chunk;
             }
         }
+    }
+
+    private async Task EnsureSuccessAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var responseBody = await response.Content
+            .ReadAsStringAsync(cancellationToken);
+        var diagnosticHeaders = ReadDiagnosticHeaders(response);
+        var exception = new GroqApiException(
+            response.StatusCode,
+            responseBody,
+            diagnosticHeaders);
+
+        _logger.LogWarning(
+            "Groq request failed. StatusCode: {StatusCode}; " +
+            "RetryAfter: {RetryAfter}; RequestId: {RequestId}; " +
+            "RateLimitHeaders: {@RateLimitHeaders}; Response: {ResponseBody}",
+            (int)response.StatusCode,
+            exception.RetryAfter,
+            exception.RequestId,
+            diagnosticHeaders,
+            responseBody);
+
+        throw exception;
+    }
+
+    private static IReadOnlyDictionary<string, string> ReadDiagnosticHeaders(
+        HttpResponseMessage response)
+    {
+        var result = new Dictionary<string, string>(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var name in DiagnosticHeaderNames)
+        {
+            if (response.Headers.TryGetValues(name, out var values) ||
+                response.Content.Headers.TryGetValues(name, out values))
+            {
+                result[name] = string.Join(", ", values);
+            }
+        }
+
+        return result;
     }
 
     private static IReadOnlyList<ChatMessage> CreateAgentMessages(

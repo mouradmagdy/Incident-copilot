@@ -1,0 +1,201 @@
+[
+  {
+    "id": "metrics-1",
+    "question": "What is OrderService's current p95 latency?",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "OrderService"}
+    }
+  },
+  {
+    "id": "metrics-2",
+    "question": "How many active database connections does PaymentService currently have?",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "PaymentService"}
+    }
+  },
+  {
+    "id": "metrics-3",
+    "question": "What is the current CPU utilization of ProcessingWorker?",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "ProcessingWorker"}
+    }
+  },
+  {
+    "id": "metrics-4",
+    "question": "What is NotificationService's current error rate?",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "NotificationService"}
+    }
+  },
+  {
+    "id": "metrics-5",
+    "question": "What is OrderService's current request rate?",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "OrderService"}
+    }
+  },
+  {
+    "id": "metrics-6",
+    "question": "Check PaymentService's current memory usage.",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "PaymentService"}
+    }
+  },
+  {
+    "id": "metrics-7",
+    "question": "How deep is ProcessingWorker's queue right now?",
+    "requiredTools": ["get_service_metrics"],
+    "allowedTools": ["get_service_metrics"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "ProcessingWorker"}
+    }
+  },
+  {
+    "id": "logs-1",
+    "question": "What errors has OrderService produced recently?",
+    "requiredTools": ["get_recent_logs"],
+    "allowedTools": ["get_recent_logs"],
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "OrderService"}
+    }
+  },
+  {
+    "id": "logs-2",
+    "question": "Show me recent warnings and errors from PaymentService.",
+    "requiredTools": ["get_recent_logs"],
+    "allowedTools": ["get_recent_logs"],
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "PaymentService"}
+    }
+  },
+  {
+    "id": "logs-3",
+    "question": "Has ProcessingWorker logged any recent failures?",
+    "requiredTools": ["get_recent_logs"],
+    "allowedTools": ["get_recent_logs"],
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "ProcessingWorker"}
+    }
+  },
+  {
+    "id": "logs-4",
+    "question": "Show recent exceptions from NotificationService.",
+    "requiredTools": ["get_recent_logs"],
+    "allowedTools": ["get_recent_logs"],
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "NotificationService"}
+    }
+  },
+  {
+    "id": "logs-5",
+    "question": "Show OrderService logs from the last 30 minutes.",
+    "requiredTools": ["get_recent_logs"],
+    "allowedTools": ["get_recent_logs"],
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "OrderService"}
+    }
+  },
+  {
+    "id": "logs-6",
+    "question": "Are there any recent PaymentService logs with trace IDs?",
+    "requiredTools": ["get_recent_logs"],
+    "allowedTools": ["get_recent_logs"],
+    "expectedArguments": {
+      "get_recent_logs": {"serviceName": "PaymentService"}
+    }
+  },
+  {
+    "id": "investigate-1",
+    "question": "Check OrderService's current metrics and recent logs and tell me why it is unhealthy.",
+    "requiredTools": ["get_service_metrics", "get_recent_logs"],
+    "allowedTools": ["get_service_metrics", "get_recent_logs"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "OrderService"},
+      "get_recent_logs": {"serviceName": "OrderService"}
+    }
+  },
+  {
+    "id": "investigate-2",
+    "question": "Investigate PaymentService using its current metrics and recent errors.",
+    "requiredTools": ["get_service_metrics", "get_recent_logs"],
+    "allowedTools": ["get_service_metrics", "get_recent_logs"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "PaymentService"},
+      "get_recent_logs": {"serviceName": "PaymentService"}
+    }
+  },
+  {
+    "id": "investigate-3",
+    "question": "Use current metrics and recent logs to investigate ProcessingWorker's queue problem.",
+    "requiredTools": ["get_service_metrics", "get_recent_logs"],
+    "allowedTools": ["get_service_metrics", "get_recent_logs"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "ProcessingWorker"},
+      "get_recent_logs": {"serviceName": "ProcessingWorker"}
+    }
+  },
+  {
+    "id": "investigate-4",
+    "question": "Check NotificationService's current error rate and recent logs.",
+    "requiredTools": ["get_service_metrics", "get_recent_logs"],
+    "allowedTools": ["get_service_metrics", "get_recent_logs"],
+    "expectedArguments": {
+      "get_service_metrics": {"serviceName": "NotificationService"},
+      "get_recent_logs": {"serviceName": "NotificationService"}
+    }
+  },
+  {
+    "id": "knowledge-1",
+    "question": "What is database connection pooling?",
+    "requiredTools": [],
+    "allowedTools": []
+  },
+  {
+    "id": "knowledge-2",
+    "question": "What symptoms indicate database connection exhaustion?",
+    "requiredTools": [],
+    "allowedTools": []
+  },
+  {
+    "id": "knowledge-3",
+    "question": "What queue depth is considered critical?",
+    "requiredTools": [],
+    "allowedTools": []
+  },
+  {
+    "id": "knowledge-4",
+    "question": "What should engineers do first during a production incident?",
+    "requiredTools": [],
+    "allowedTools": []
+  },
+  {
+    "id": "irrelevant-1",
+    "question": "How do I cook pasta?",
+    "requiredTools": [],
+    "allowedTools": []
+  },
+  {
+    "id": "irrelevant-2",
+    "question": "Write a poem about the ocean.",
+    "requiredTools": [],
+    "allowedTools": []
+  },
+  {
+    "id": "irrelevant-3",
+    "question": "Who won the football match yesterday?",
+    "requiredTools": [],
+    "allowedTools": []
+  }
+]

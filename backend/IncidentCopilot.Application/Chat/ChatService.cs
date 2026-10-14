@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 
 namespace IncidentCopilot.Application.Chat;
@@ -49,8 +50,41 @@ public sealed class ChatService : IChatService
         }
     }
 
-    public async Task<ChatStreamResponse> AskStreamAsync(
+    public Task<ChatStreamResponse> AskStreamAsync(
         string message,
+        CancellationToken cancellationToken)
+    {
+        return PrepareAgentStreamAsync(
+            message,
+            new List<ToolCallTrace>(),
+            cancellationToken);
+    }
+
+    public async Task<AgentRunResult> RunAgentAsync(
+        string message,
+        CancellationToken cancellationToken)
+    {
+        var toolCalls = new List<ToolCallTrace>();
+        var response = await PrepareAgentStreamAsync(
+            message,
+            toolCalls,
+            cancellationToken);
+        var content = new StringBuilder();
+
+        await foreach (var chunk in response.Content
+            .WithCancellation(cancellationToken))
+        {
+            content.Append(chunk);
+        }
+
+        return new AgentRunResult(
+            content.ToString(),
+            toolCalls.ToArray());
+    }
+
+    private async Task<ChatStreamResponse> PrepareAgentStreamAsync(
+        string message,
+        ICollection<ToolCallTrace> toolCalls,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(message))
@@ -111,6 +145,7 @@ public sealed class ChatService : IChatService
                 systemPrompt,
                 message,
                 relevantChunks.Count > 0,
+                toolCalls,
                 cancellationToken),
             sources);
     }
@@ -119,6 +154,7 @@ public sealed class ChatService : IChatService
         string systemPrompt,
         string message,
         bool hasRelevantDocumentation,
+        ICollection<ToolCallTrace> toolCalls,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var llmStopwatch = Stopwatch.StartNew();
@@ -232,9 +268,32 @@ public sealed class ChatService : IChatService
                     requestedToolCall.Name,
                     FormatJson(requestedToolCall.ArgumentsJson));
 
-                var toolResult = await requestedTool.ExecuteAsync(
+                ToolResult toolResult;
+
+                try
+                {
+                    toolResult = await requestedTool.ExecuteAsync(
+                        requestedToolCall.ArgumentsJson,
+                        cancellationToken);
+                }
+                catch (Exception exception)
+                    when (exception is not OperationCanceledException)
+                {
+                    _logger.LogError(
+                        exception,
+                        "Tool execution threw an exception: {ToolName}.",
+                        requestedToolCall.Name);
+                    toolResult = new ToolResult(
+                        false,
+                        string.Empty,
+                        exception.Message);
+                }
+
+                toolCalls.Add(new ToolCallTrace(
+                    requestedToolCall.Name,
                     requestedToolCall.ArgumentsJson,
-                    cancellationToken);
+                    toolResult.Success,
+                    toolResult.Error));
 
                 _logger.LogInformation(
                     "Tool completed: {ToolName}. Success: {ToolSucceeded}.",

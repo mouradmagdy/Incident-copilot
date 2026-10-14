@@ -82,7 +82,7 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
-    public async Task AskStreamAsync_MultiStepLoop_CanCallTwoToolsBeforeAnswering()
+    public async Task RunAgentAsync_MultiStepLoop_ReturnsAnswerAndToolTrace()
     {
         var metricsCall = new LlmToolCall(
             "call_metrics",
@@ -106,13 +106,22 @@ public sealed class ChatServiceTests
             new ToolResult(true, "{\"logs\":[{\"message\":\"Database timeout.\"}]}"));
         var service = CreateService(llmClient, metricsTool, logsTool);
 
-        var response = await service.AskStreamAsync(
+        var result = await service.RunAgentAsync(
             "Investigate the current OrderService latency and errors.",
             CancellationToken.None);
 
         Assert.Equal(
-            ["High latency correlates with database timeout logs."],
-            await ReadAllAsync(response.Content));
+            "High latency correlates with database timeout logs.",
+            result.Content);
+        Assert.Equal(2, result.ToolCalls.Count);
+        Assert.Equal("get_service_metrics", result.ToolCalls[0].ToolName);
+        Assert.Equal(metricsCall.ArgumentsJson, result.ToolCalls[0].ArgumentsJson);
+        Assert.True(result.ToolCalls[0].Success);
+        Assert.Null(result.ToolCalls[0].Error);
+        Assert.Equal("get_recent_logs", result.ToolCalls[1].ToolName);
+        Assert.Equal(logsCall.ArgumentsJson, result.ToolCalls[1].ArgumentsJson);
+        Assert.True(result.ToolCalls[1].Success);
+        Assert.Null(result.ToolCalls[1].Error);
         Assert.Equal(1, metricsTool.ExecutionCount);
         Assert.Equal(1, logsTool.ExecutionCount);
         Assert.Equal(3, llmClient.AgentRoundRequests.Count);
@@ -124,6 +133,35 @@ public sealed class ChatServiceTests
             llmClient.AgentRoundRequests[2]
                 .ToolExchanges
                 .Select(exchange => exchange.ToolCall.Name));
+    }
+
+    [Fact]
+    public async Task RunAgentAsync_WhenToolFails_RecordsErrorInTrace()
+    {
+        var toolCall = new LlmToolCall(
+            "call_logs",
+            "get_recent_logs",
+            "{\"serviceName\":\"OrderService\"}");
+        var llmClient = new FakeLlmClient(
+            new LlmTurnResponse(null, [toolCall]),
+            new LlmTurnResponse("No recent logs were available.", []));
+        var logsTool = new FakeAgentTool(
+            "get_recent_logs",
+            new ToolResult(
+                false,
+                string.Empty,
+                "No logs were found."));
+        var service = CreateService(llmClient, logsTool);
+
+        var result = await service.RunAgentAsync(
+            "Show recent OrderService logs.",
+            CancellationToken.None);
+
+        var trace = Assert.Single(result.ToolCalls);
+        Assert.Equal("get_recent_logs", trace.ToolName);
+        Assert.Equal(toolCall.ArgumentsJson, trace.ArgumentsJson);
+        Assert.False(trace.Success);
+        Assert.Equal("No logs were found.", trace.Error);
     }
 
     [Fact]

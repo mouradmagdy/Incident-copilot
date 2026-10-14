@@ -1,0 +1,719 @@
+{
+  "startedAtUtc": "2026-10-14T13:05:06.127820+00:00",
+  "completedAtUtc": "2026-10-14T13:05:57.827882+00:00",
+  "baseUrl": "http://localhost:5087",
+  "dataset": "C:\\Users\\user\\Desktop\\incident-copilot\\evals\\tool-calling.json",
+  "summary": {
+    "caseCount": 24,
+    "requiredToolSelection": 0.25,
+    "unnecessaryToolAvoidance": 0.25,
+    "argumentAccuracy": 0.25,
+    "toolExecutionSuccess": 0.25,
+    "overallCaseAccuracy": 0.25
+  },
+  "results": [
+    {
+      "id": "metrics-1",
+      "question": "What is OrderService's current p95 latency?",
+      "answer": "OrderService’s current p95 latency is **363 ms**.",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"OrderService\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "metrics-2",
+      "question": "How many active database connections does PaymentService currently have?",
+      "answer": "PaymentService currently has **33 active database connections**.",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"PaymentService\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "metrics-3",
+      "question": "What is the current CPU utilization of ProcessingWorker?",
+      "answer": "The current CPU utilization for **ProcessingWorker** is **42 %**.",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"ProcessingWorker\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "metrics-4",
+      "question": "What is NotificationService's current error rate?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "NotificationService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))"
+    },
+    {
+      "id": "metrics-5",
+      "question": "What is OrderService's current request rate?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-6",
+      "question": "Check PaymentService's current memory usage.",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-7",
+      "question": "How deep is ProcessingWorker's queue right now?",
+      "answer": "ProcessingWorker’s queue depth is currently **12**.",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"ProcessingWorker\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "logs-1",
+      "question": "What errors has OrderService produced recently?",
+      "answer": "There are no error‑level log entries for **OrderService** in the past 15 minutes.",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [
+        "get_recent_logs"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_recent_logs",
+          "argumentsJson": "{\"maxResults\":20,\"minimumLevel\":\"Error\",\"minutes\":15,\"serviceName\":\"OrderService\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "logs-2",
+      "question": "Show me recent warnings and errors from PaymentService.",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7508, Requested 1163. Please try again in 5.0325s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"6\",\"requestId\":\"req_01m4x89vhmeky9b7f60fjhnajv\",\"rateLimitHeaders\":{\"retry-after\":\"6\",\"x-request-id\":\"req_01m4x89vhmeky9b7f60fjhnajv\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"492\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"56.31s\"}}"
+    },
+    {
+      "id": "logs-3",
+      "question": "Has ProcessingWorker logged any recent failures?",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7455, Requested 1176. Please try again in 4.7325s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"5\",\"requestId\":\"req_01m4x89vy3e528mt0h03tr3202\",\"rateLimitHeaders\":{\"retry-after\":\"5\",\"x-request-id\":\"req_01m4x89vy3e528mt0h03tr3202\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"545\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"55.912s\"}}"
+    },
+    {
+      "id": "logs-4",
+      "question": "Show recent exceptions from NotificationService.",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "NotificationService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7413, Requested 1128. Please try again in 4.0575s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"5\",\"requestId\":\"req_01m4x89w7seg8awk66gfjywe9m\",\"rateLimitHeaders\":{\"retry-after\":\"5\",\"x-request-id\":\"req_01m4x89w7seg8awk66gfjywe9m\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"587\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"55.597s\"}}"
+    },
+    {
+      "id": "logs-5",
+      "question": "Show OrderService logs from the last 30 minutes.",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7372, Requested 1150. Please try again in 3.915s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"4\",\"requestId\":\"req_01m4x89whjewvs3mdmce5dygve\",\"rateLimitHeaders\":{\"retry-after\":\"4\",\"x-request-id\":\"req_01m4x89whjewvs3mdmce5dygve\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"628\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"55.29s\"}}"
+    },
+    {
+      "id": "logs-6",
+      "question": "Are there any recent PaymentService logs with trace IDs?",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7329, Requested 1164. Please try again in 3.6975s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"4\",\"requestId\":\"req_01m4x89wvgetvs8hb07xmj3zjh\",\"rateLimitHeaders\":{\"retry-after\":\"4\",\"x-request-id\":\"req_01m4x89wvgetvs8hb07xmj3zjh\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"671\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"54.967s\"}}"
+    },
+    {
+      "id": "investigate-1",
+      "question": "Check OrderService's current metrics and recent logs and tell me why it is unhealthy.",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        },
+        "get_recent_logs": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7288, Requested 1102. Please try again in 2.925s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"3\",\"requestId\":\"req_01m4x89x55e6rvjfea0tte7e01\",\"rateLimitHeaders\":{\"retry-after\":\"3\",\"x-request-id\":\"req_01m4x89x55e6rvjfea0tte7e01\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"712\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"54.66s\"}}"
+    },
+    {
+      "id": "investigate-2",
+      "question": "Investigate PaymentService using its current metrics and recent errors.",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "PaymentService"
+        },
+        "get_recent_logs": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7250, Requested 1099. Please try again in 2.617499999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"3\",\"requestId\":\"req_01m4x89xe2engb3k3sfsfcbeqd\",\"rateLimitHeaders\":{\"retry-after\":\"3\",\"x-request-id\":\"req_01m4x89xe2engb3k3sfsfcbeqd\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"750\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"54.375s\"}}"
+    },
+    {
+      "id": "investigate-3",
+      "question": "Use current metrics and recent logs to investigate ProcessingWorker's queue problem.",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "ProcessingWorker"
+        },
+        "get_recent_logs": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7206, Requested 1110. Please try again in 2.37s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"3\",\"requestId\":\"req_01m4x89xrbeze8phcc1f1hf3eb\",\"rateLimitHeaders\":{\"retry-after\":\"3\",\"x-request-id\":\"req_01m4x89xrbeze8phcc1f1hf3eb\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"794\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"54.045s\"}}"
+    },
+    {
+      "id": "investigate-4",
+      "question": "Check NotificationService's current error rate and recent logs.",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "NotificationService"
+        },
+        "get_recent_logs": {
+          "serviceName": "NotificationService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7134, Requested 1103. Please try again in 1.777499999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"2\",\"requestId\":\"req_01m4x89y97ecgt4tk23cb1hxqp\",\"rateLimitHeaders\":{\"retry-after\":\"2\",\"x-request-id\":\"req_01m4x89y97ecgt4tk23cb1hxqp\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"866\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"53.505s\"}}"
+    },
+    {
+      "id": "knowledge-1",
+      "question": "What is database connection pooling?",
+      "answer": "",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7094, Requested 1138. Please try again in 1.74s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"2\",\"requestId\":\"req_01m4x89yjqemnte9dsrd9a6p1n\",\"rateLimitHeaders\":{\"retry-after\":\"2\",\"x-request-id\":\"req_01m4x89yjqemnte9dsrd9a6p1n\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"906\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"53.205s\"}}"
+    },
+    {
+      "id": "knowledge-2",
+      "question": "What symptoms indicate database connection exhaustion?",
+      "answer": "",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7048, Requested 1122. Please try again in 1.275s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"2\",\"requestId\":\"req_01m4x89yxcehfrhr0q3dtvk838\",\"rateLimitHeaders\":{\"retry-after\":\"2\",\"x-request-id\":\"req_01m4x89yxcehfrhr0q3dtvk838\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"952\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"52.86s\"}}"
+    },
+    {
+      "id": "knowledge-3",
+      "question": "What queue depth is considered critical?",
+      "answer": "",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7006, Requested 1091. Please try again in 727.5ms. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"1\",\"requestId\":\"req_01m4x89z77e0tv0ss3hexjpyre\",\"rateLimitHeaders\":{\"retry-after\":\"1\",\"x-request-id\":\"req_01m4x89z77e0tv0ss3hexjpyre\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"994\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"52.545s\"}}"
+    },
+    {
+      "id": "knowledge-4",
+      "question": "What should engineers do first during a production incident?",
+      "answer": "",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6967, Requested 1240. Please try again in 1.5525s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"2\",\"requestId\":\"req_01m4x89zg9e68atf8ea2rgbmt2\",\"rateLimitHeaders\":{\"retry-after\":\"2\",\"x-request-id\":\"req_01m4x89zg9e68atf8ea2rgbmt2\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"978\",\"x-ratelimit-remaining-tokens\":\"1033\",\"x-ratelimit-reset-requests\":\"31m40.8s\",\"x-ratelimit-reset-tokens\":\"52.252s\"}}"
+    },
+    {
+      "id": "irrelevant-1",
+      "question": "How do I cook pasta?",
+      "answer": "I can only help with questions about the monitored systems and the supplied internal documentation.",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "irrelevant-2",
+      "question": "Write a poem about the ocean.",
+      "answer": "",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7491, Requested 684. Please try again in 1.3125s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"2\",\"requestId\":\"req_01m4x8a0dhe9xamcs9fhq6wwjw\",\"rateLimitHeaders\":{\"retry-after\":\"2\",\"x-request-id\":\"req_01m4x8a0dhe9xamcs9fhq6wwjw\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"977\",\"x-ratelimit-remaining-tokens\":\"509\",\"x-ratelimit-reset-requests\":\"33m7.2s\",\"x-ratelimit-reset-tokens\":\"56.182s\"}}"
+    },
+    {
+      "id": "irrelevant-3",
+      "question": "Who won the football match yesterday?",
+      "answer": "",
+      "requiredTools": [],
+      "allowedTools": [],
+      "expectedArguments": {},
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "429 Client Error: Too Many Requests for url: http://localhost:5087/api/evals/tool-calling; response: {\"error\":\"Groq rate limit exceeded.\",\"detail\":\"{\\\"error\\\":{\\\"message\\\":\\\"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01m3cm6r8re9dv6bdn0b2frrt6` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7433, Requested 654. Please try again in 652.5ms. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\\\",\\\"type\\\":\\\"tokens\\\",\\\"code\\\":\\\"rate_limit_exceeded\\\"}}\\n\",\"retryAfter\":\"1\",\"requestId\":\"req_01m4x8a0v2eea82xz1na8m5e9g\",\"rateLimitHeaders\":{\"retry-after\":\"1\",\"x-request-id\":\"req_01m4x8a0v2eea82xz1na8m5e9g\",\"x-ratelimit-limit-requests\":\"1000\",\"x-ratelimit-limit-tokens\":\"8000\",\"x-ratelimit-remaining-requests\":\"977\",\"x-ratelimit-remaining-tokens\":\"567\",\"x-ratelimit-reset-requests\":\"33m7.2s\",\"x-ratelimit-reset-tokens\":\"55.747s\"}}"
+    }
+  ]
+}

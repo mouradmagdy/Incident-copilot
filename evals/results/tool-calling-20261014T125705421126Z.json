@@ -1,0 +1,466 @@
+{
+  "startedAtUtc": "2026-10-14T12:57:05.421126+00:00",
+  "completedAtUtc": null,
+  "baseUrl": "http://localhost:5087",
+  "dataset": "C:\\Users\\user\\Desktop\\incident-copilot\\evals\\tool-calling.json",
+  "summary": {
+    "caseCount": 14,
+    "requiredToolSelection": 0.21428571428571427,
+    "unnecessaryToolAvoidance": 0.21428571428571427,
+    "argumentAccuracy": 0.21428571428571427,
+    "toolExecutionSuccess": 0.21428571428571427,
+    "overallCaseAccuracy": 0.21428571428571427
+  },
+  "results": [
+    {
+      "id": "metrics-1",
+      "question": "What is OrderService's current p95 latency?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-2",
+      "question": "How many active database connections does PaymentService currently have?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-3",
+      "question": "What is the current CPU utilization of ProcessingWorker?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-4",
+      "question": "What is NotificationService's current error rate?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "NotificationService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-5",
+      "question": "What is OrderService's current request rate?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-6",
+      "question": "Check PaymentService's current memory usage.",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "metrics-7",
+      "question": "How deep is ProcessingWorker's queue right now?",
+      "answer": "",
+      "requiredTools": [
+        "get_service_metrics"
+      ],
+      "allowedTools": [
+        "get_service_metrics"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_service_metrics"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "logs-1",
+      "question": "What errors has OrderService produced recently?",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "logs-2",
+      "question": "Show me recent warnings and errors from PaymentService.",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "logs-3",
+      "question": "Has ProcessingWorker logged any recent failures?",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "ProcessingWorker"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "HTTPConnectionPool(host='localhost', port=5087): Max retries exceeded with url: /api/evals/tool-calling (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=5087): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": "logs-4",
+      "question": "Show recent exceptions from NotificationService.",
+      "answer": "There are no recent log entries at the **Error** level (exceptions) for **NotificationService** in the past 15 minutes.",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "NotificationService"
+        }
+      },
+      "actualTools": [
+        "get_recent_logs"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_recent_logs",
+          "argumentsJson": "{\"maxResults\":20,\"minimumLevel\":\"Error\",\"minutes\":15,\"serviceName\":\"NotificationService\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "logs-5",
+      "question": "Show OrderService logs from the last 30 minutes.",
+      "answer": "Here are the most recent log entries from **OrderService** for the last 30 minutes (latest first):\n\n| Timestamp (UTC) | Level | Message | Exception Type | Trace ID |\n|------------------|-------|---------|----------------|----------|\n| 2026‑10‑14 12:47:22.527359 | Error | Database operation exceeded timeout. | TimeoutException | 35cf9d816dee466e971752cad06f1aed |\n| 2026‑10‑14 12:47:12.530872 | Error | Database operation exceeded timeout. | TimeoutException | 044f1b2ac70b452198555e9d93604601 |\n| 2026‑10‑14 12:47:02.527566 | Error | Database connection pool exhausted. | NpgsqlException | 60818a0200724755a97096192596421b |\n| 2026‑10‑14 12:46:52.522479 | Error | Timeout while waiting for database connection. | TimeoutException | 488f9d7976644e8a9fb0d304038943ac |\n| 2026‑10‑14 12:46:42.529986 | Error | Database operation exceeded timeout. | TimeoutException | 8d245e61192b47f9a5f156fa2e7f2a6f |\n| 2026‑10‑14 12:46:32.530145 | Error | Database operation exceeded timeout. | TimeoutException | 13db79ffec6146028fe8538c13bd0c6a |\n| 2026‑10‑14 12:46:22.520165 | Error | Timeout while waiting for database connection. | TimeoutException | a537bd8e39bb4897b44015829a31058b |\n| 2026‑10‑14 12:46:12.527063 | Error | Database connection pool exhausted. | NpgsqlException | cda780f6842f4ee4a58ef92f3bd3c0bc |\n| 2026‑10‑14 12:46:02.520242 | Error | Database operation exceeded timeout. | TimeoutException | 8b9963b8b8ed49609d030c40df855999 |\n| 2026‑10‑14 12:45:52.522140 | Error | Timeout while waiting for database connection. | TimeoutException | 4a334cdbaad64487a9e30a976953570a |\n| 2026‑10‑14 12:45:42.530269 | Error | Database operation exceeded timeout. | TimeoutException | e347ff6b457c4a19b246fddfc2ef4301 |\n| 2026‑10‑14 12:45:32.522686 | Error | Database connection pool exhausted. | NpgsqlException | 0fd87acde4254e119186d887fa3dd718 |\n| 2026‑10‑14 12:45:22.521220 | Error | Database operation exceeded timeout. | TimeoutException | 1bfaedb6ee564e9c9e8085d74923955b |\n| 2026‑10‑14 12:45:12.523947 | Error | Database operation exceeded timeout. | TimeoutException | b164953718df45c599bf7390079590c2 |\n| 2026‑10‑14 12:45:02.529171 | Error | Timeout while waiting for database connection. | TimeoutException | a3a6d0471421496ca9e75710cdf414e9 |\n| 2026‑10‑14 12:44:52.525706 | Error | Database connection pool exhausted. | NpgsqlException | efb5c038f0c2436b8657f545643a7111 |\n| 2026‑10‑14 12:44:42.533390 | Error | Timeout while waiting for database connection. | TimeoutException | d23eb1a11bc743339cf9a0bd80c1abf0 |\n| 2026‑10‑14 12:44:32.532518 | Error | Database connection pool exhausted. | NpgsqlException | 72c9377054a04659a024ee148f6d488a |\n| 2026‑10‑14 12:44:22.530217 | Error | Database operation exceeded timeout. | TimeoutException | ec18209b42db492487f37ddcb78f60d6 |\n| 2026‑10‑14 12:44:12.522635 | Error | Timeout while waiting for database connection. | TimeoutException | 21902e43f70f42cbbd5af69645eddaf2 |\n\nAll entries are **Error**‑level and relate to database timeouts or connection‑pool exhaustion. If you need further analysis (e.g., root‑cause investigation, mitigation steps, or additional logs), let me know.",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [
+        "get_recent_logs"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_recent_logs",
+          "argumentsJson": "{\"maxResults\":20,\"minutes\":30,\"serviceName\":\"OrderService\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    },
+    {
+      "id": "logs-6",
+      "question": "Are there any recent PaymentService logs with trace IDs?",
+      "answer": "",
+      "requiredTools": [
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_recent_logs": {
+          "serviceName": "PaymentService"
+        }
+      },
+      "actualTools": [],
+      "toolCalls": [],
+      "missingTools": [
+        "get_recent_logs"
+      ],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": false,
+      "noUnnecessaryTools": false,
+      "argumentsPassed": false,
+      "executionPassed": false,
+      "passed": false,
+      "endpointError": "500 Server Error: Internal Server Error for url: http://localhost:5087/api/evals/tool-calling"
+    },
+    {
+      "id": "investigate-1",
+      "question": "Check OrderService's current metrics and recent logs and tell me why it is unhealthy.",
+      "answer": "**Current snapshot (last 5 minutes)**  \n\n| Metric | Value |\n|--------|-------|\n| Requests per second | 49 |\n| Average latency | 251 ms |\n| 95 th‑percentile latency | 365 ms |\n| Error rate | 0.03 % |\n| CPU usage | 49 % |\n| Memory usage | 57 % |\n| Queue depth | 16 |\n| Active DB connections | 24 |\n\n**Why the service looks unhealthy**\n\n* **Latency is elevated.** An average latency of ≈ 250 ms (P95 ≈ 365 ms) is noticeably higher than a typical low‑latency target for OrderService (which is usually < 100 ms).  \n* **Queue depth is non‑zero.** A depth of 16 indicates work is waiting to be processed. While the absolute number is not huge, any sustained queue indicates that processing is not keeping up with arrival rate and can be a root cause of the latency increase.  \n* **No recent warning‑level logs** were returned, so the problem is not currently being surfaced as explicit errors, but the performance metrics already show a degradation.\n\n**Next investigation steps (per the internal run‑books)**  \n\n1. **Queue‑backlog investigation** – Verify the queue’s **current depth, growth rate, and oldest‑job age**, and compare the **arrival vs. completion rate**.  \n2. **Worker health check** – Look at the number and health of `ProcessingWorker` instances that consume the queue. Examine their CPU, memory, GC activity, and any recent deployments that might have changed processing behavior.  \n3. **Database‑connection health** – Confirm that the 24 active connections are well below the configured pool limit and that there are no long‑running or blocked queries holding connections.  \n\n**Suggested immediate mitigations (from the run‑books)**  \n\n* If the queue is growing, consider **temporarily scaling out additional `ProcessingWorker` instances** or **throttling incoming traffic** until the backlog drains.  \n* If workers are saturated (high CPU/memory), investigate recent code changes or deployments that may have introduced heavier processing or memory leaks.  \n* If database connections are approaching the pool limit, look for **undisposed connections or long‑running queries** and address them (e.g., fix connection‑leak bugs, add indexes, or increase the pool size).  \n\n**What to do next**\n\n1. Run the **queue‑backlog investigation checklist** (confirm depth, growth, oldest‑job age, arrival vs. completion).  \n2. Inspect the health of the `ProcessingWorker` instances (CPU/memory, GC, recent logs).  \n3. Pull database‑connection metrics and session details to rule out exhaustion.\n\nOnce those data points are gathered you’ll be able to pinpoint the exact cause of the elevated latency and take the appropriate corrective action.  \n\n*(All guidance is based on the supplied internal documentation; no additional runtime data beyond the metrics shown above is available at this moment.)*",
+      "requiredTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "allowedTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "expectedArguments": {
+        "get_service_metrics": {
+          "serviceName": "OrderService"
+        },
+        "get_recent_logs": {
+          "serviceName": "OrderService"
+        }
+      },
+      "actualTools": [
+        "get_service_metrics",
+        "get_recent_logs"
+      ],
+      "toolCalls": [
+        {
+          "toolName": "get_service_metrics",
+          "argumentsJson": "{\"minutes\":5,\"serviceName\":\"OrderService\"}",
+          "success": true,
+          "error": null
+        },
+        {
+          "toolName": "get_recent_logs",
+          "argumentsJson": "{\"maxResults\":20,\"minimumLevel\":\"Warning\",\"minutes\":5,\"serviceName\":\"OrderService\"}",
+          "success": true,
+          "error": null
+        }
+      ],
+      "missingTools": [],
+      "unexpectedTools": [],
+      "argumentFailures": [],
+      "executionFailures": [],
+      "requiredToolsPassed": true,
+      "noUnnecessaryTools": true,
+      "argumentsPassed": true,
+      "executionPassed": true,
+      "passed": true
+    }
+  ]
+}

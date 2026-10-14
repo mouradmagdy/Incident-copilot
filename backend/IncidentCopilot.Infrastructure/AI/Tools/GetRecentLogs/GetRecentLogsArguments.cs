@@ -7,4 +7,6 @@ internal sealed class GetRecentLogsArguments
     public int Minutes { get; init; } = 15;
 
     public int MaxResults { get; init; } = 20;
+
+    public string? MinimumLevel { get; init; }
 }

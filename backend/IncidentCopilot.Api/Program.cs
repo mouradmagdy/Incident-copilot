@@ -143,6 +143,7 @@ app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
     app.MapSimulationEndpoints();
+    app.MapToolCallingEvalEndpoints();
 }
 
 if (app.Environment.IsDevelopment())

@@ -1,9 +1,11 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Core.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace IncidentCopilot.Application.Chat;
 
@@ -11,15 +13,21 @@ public sealed class ChatService : IChatService
 {
     private const int TopK = 4;
     private const double MaxDistance = 0.75;
+    private static readonly JsonSerializerOptions IndentedJsonOptions = new()
+    {
+        WriteIndented = true
+    };
 
     private readonly IKnowledgeRetriever _retriever;
     private readonly ILlmClient _llmClient;
     private readonly ILogger<ChatService> _logger;
     private readonly ChatDiagnosticsOptions _diagnosticsOptions;
+    private readonly IAgentTool _agentTool;
 
     public ChatService(
         IKnowledgeRetriever retriever,
         ILlmClient llmClient,
+        IAgentTool agentTool,
         ILogger<ChatService> logger,
         IOptions<ChatDiagnosticsOptions> diagnosticsOptions)
     {
@@ -27,6 +35,7 @@ public sealed class ChatService : IChatService
         _llmClient = llmClient;
         _logger = logger;
         _diagnosticsOptions = diagnosticsOptions.Value;
+        _agentTool = agentTool;
     }
 
     public async Task<ChatStreamResponse> AskStreamAsync(
@@ -62,20 +71,9 @@ public sealed class ChatService : IChatService
 
         LogRetrievedChunks(retrievedChunks);
 
-        if (relevantChunks.Count == 0)
-        {
-            _logger.LogInformation(
-                "LLM duration: {LlmDurationMs} ms. LLM call skipped because no chunks survived the distance threshold.",
-                0);
-
-            return new ChatStreamResponse(
-                StreamText("I don't have relevant internal documentation to answer that question."),
-                []);
-        }
-
         var context = BuildContext(relevantChunks);
         var systemPrompt = BuildSystemPrompt(context);
-        var llmRequest = new LlmRequest(systemPrompt, message);
+
         // Sources come from retrieved context, never from the LLM response.
         var sources = relevantChunks
             .DistinctBy(chunk => (chunk.FileName, chunk.Section))
@@ -85,21 +83,133 @@ public sealed class ChatService : IChatService
                 chunk.Section))
             .ToList();
 
+        if (relevantChunks.Count > 0)
+        {
+            _logger.LogInformation(
+                "RAG context selected: {RelevantChunkCount} chunk(s).",
+                relevantChunks.Count);
+        }
+        else
+        {
+            _logger.LogInformation(
+                "RAG context selected: none. The response must use a tool or return the scope refusal.");
+        }
+
         return new ChatStreamResponse(
-            StreamLlmResponseAsync(llmRequest, cancellationToken),
+            StreamResponseAsync(
+                systemPrompt,
+                message,
+                relevantChunks.Count > 0,
+                cancellationToken),
             sources);
     }
 
-    private async IAsyncEnumerable<string> StreamLlmResponseAsync(
-        LlmRequest request,
+    private async IAsyncEnumerable<string> StreamResponseAsync(
+        string systemPrompt,
+        string message,
+        bool hasRelevantDocumentation,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var llmStopwatch = Stopwatch.StartNew();
 
         try
         {
+            var tool = _agentTool;
+            LlmToolCall? requestedToolCall = null;
+            var streamedContent = false;
+
+            await foreach (var streamEvent in _llmClient
+                .GenerateWithToolsStreamAsync(
+                    new LlmToolRequest(
+                        systemPrompt,
+                        message,
+                        [tool.Definition]),
+                    cancellationToken)
+                .WithCancellation(cancellationToken))
+            {
+                if (!string.IsNullOrEmpty(streamEvent.Content))
+                {
+                    streamedContent = true;
+                    yield return streamEvent.Content;
+                }
+
+                if (streamEvent.ToolCall is not null)
+                {
+                    if (requestedToolCall is not null)
+                    {
+                        throw new InvalidOperationException(
+                            "The LLM requested multiple tool calls, but this chat flow supports one call per turn.");
+                    }
+
+                    requestedToolCall = streamEvent.ToolCall;
+                }
+            }
+
+            if (requestedToolCall is null)
+            {
+                if (!streamedContent)
+                {
+                    throw new InvalidOperationException(
+                        "The LLM returned neither message content nor a tool call.");
+                }
+
+                _logger.LogInformation(
+                    hasRelevantDocumentation
+                        ? "Response path: RAG. No tool was requested."
+                        : "Response path: scope refusal. No RAG context or tool call was available.");
+
+                yield break;
+            }
+
+            if (streamedContent)
+            {
+                throw new InvalidOperationException(
+                    "The LLM returned both message content and a tool call in the same turn.");
+            }
+
+            if (!string.Equals(
+                    requestedToolCall.Name,
+                    tool.Definition.Name,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"Unknown tool requested: {requestedToolCall.Name}");
+            }
+
+            _logger.LogInformation(
+                """
+                Tool requested: {ToolName}
+
+                Arguments:
+                {ToolArguments}
+                """,
+                requestedToolCall.Name,
+                FormatJson(requestedToolCall.ArgumentsJson));
+
+            var toolResult = await tool.ExecuteAsync(
+                requestedToolCall.ArgumentsJson,
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Tool completed: {ToolName}. Success: {ToolSucceeded}.",
+                requestedToolCall.Name,
+                toolResult.Success);
+
+            var serializedToolResult = toolResult.Success
+                ? toolResult.Content
+                : JsonSerializer.Serialize(new
+                {
+                    error = toolResult.Error ?? "The tool failed without an error message."
+                });
+
             await foreach (var content in _llmClient
-                .GenerateStreamAsync(request, cancellationToken)
+                .GenerateAfterToolStreamAsync(
+                    new LlmToolContinuationRequest(
+                        systemPrompt,
+                        message,
+                        requestedToolCall,
+                        serializedToolResult),
+                    cancellationToken)
                 .WithCancellation(cancellationToken))
             {
                 yield return content;
@@ -114,10 +224,19 @@ public sealed class ChatService : IChatService
         }
     }
 
-    private static async IAsyncEnumerable<string> StreamText(string content)
+    private static string FormatJson(string json)
     {
-        yield return content;
-        await Task.CompletedTask;
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(
+                document.RootElement,
+                IndentedJsonOptions);
+        }
+        catch (JsonException)
+        {
+            return json;
+        }
     }
 
     private void LogRetrievedChunks(
@@ -181,26 +300,29 @@ public sealed class ChatService : IChatService
     private static string BuildSystemPrompt(string context)
     {
         return $"""
-            You are an assistant helping software engineers investigate
-            production incidents.
+            You are an incident copilot. Your scope is limited to the monitored
+            software systems and the internal documentation supplied below.
 
-            You have access to internal operational documentation supplied
-            below.
+            Answer only from the supplied internal documentation or from tool
+            results returned in this conversation. Do not answer unrelated
+            questions or use general knowledge as a source.
 
-            Use the documentation when it is relevant to the user's question.
+            If the question is unrelated to this scope, or cannot be answered
+            from the documentation or available tools, respond exactly:
+            I can only help with questions about the monitored systems and the
+            supplied internal documentation.
 
-            Do not invent system state, metrics, logs, incidents, deployments,
-            or root causes.
+            You have access to tools for obtaining live system information.
 
-            Internal documentation describes procedures and expected system
-            behavior. It does not represent current live system state.
+            Use tools when the user's question requires current runtime data.
 
-            If the user asks about current runtime information and that
-            information is not provided, clearly state that you do not have
-            access to the required live data.
+            Never claim current metrics, logs, incidents, or system state unless
+            that information was provided by a tool in this conversation.
 
-            If the internal documentation does not contain enough information
-            to answer the question, say so.
+            Internal documentation is static knowledge and must not be treated
+            as current runtime state.
+
+            Do not invent tool results.
 
             Internal documentation:
 

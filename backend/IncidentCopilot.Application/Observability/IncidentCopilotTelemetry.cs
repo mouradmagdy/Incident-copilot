@@ -22,6 +22,29 @@ public static class IncidentCopilotTelemetry
             unit: "s",
             description: "Duration of incident-copilot agent runs.");
 
+    public static readonly Counter<long> LlmCalls = Meter.CreateCounter<long>(
+        "incidentcopilot.llm.calls",
+        unit: "{call}",
+        description: "Number of completed LLM calls.");
+
+    public static readonly Histogram<double> LlmDuration =
+        Meter.CreateHistogram<double>(
+            "incidentcopilot.llm.duration",
+            unit: "s",
+            description: "Duration of LLM calls, including streamed responses.");
+
+    public static readonly Counter<long> RetrievalCalls =
+        Meter.CreateCounter<long>(
+            "incidentcopilot.retrieval.calls",
+            unit: "{call}",
+            description: "Number of completed knowledge retrieval calls.");
+
+    public static readonly Histogram<double> RetrievalDuration =
+        Meter.CreateHistogram<double>(
+            "incidentcopilot.retrieval.duration",
+            unit: "s",
+            description: "Duration of knowledge retrieval calls.");
+
     public static readonly Counter<long> ToolCalls = Meter.CreateCounter<long>(
         "incidentcopilot.tool.calls",
         unit: "{call}",

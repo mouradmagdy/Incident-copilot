@@ -20,6 +20,18 @@ public sealed class IncidentCopilotTelemetryTests
             "incidentcopilot.agent.duration",
             IncidentCopilotTelemetry.AgentDuration.Name);
         Assert.Equal(
+            "incidentcopilot.llm.calls",
+            IncidentCopilotTelemetry.LlmCalls.Name);
+        Assert.Equal(
+            "incidentcopilot.llm.duration",
+            IncidentCopilotTelemetry.LlmDuration.Name);
+        Assert.Equal(
+            "incidentcopilot.retrieval.calls",
+            IncidentCopilotTelemetry.RetrievalCalls.Name);
+        Assert.Equal(
+            "incidentcopilot.retrieval.duration",
+            IncidentCopilotTelemetry.RetrievalDuration.Name);
+        Assert.Equal(
             "incidentcopilot.tool.calls",
             IncidentCopilotTelemetry.ToolCalls.Name);
         Assert.Equal(

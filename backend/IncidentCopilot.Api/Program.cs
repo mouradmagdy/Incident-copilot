@@ -68,7 +68,10 @@ builder.Services
         options => !string.IsNullOrWhiteSpace(options.Model),
         "Groq:Model must be configured.");
 
-builder.Services.AddHttpClient<ILlmClient, GroqLlmClient>();
+builder.Services.AddHttpClient<GroqLlmClient>();
+builder.Services.AddScoped<ILlmClient>(serviceProvider =>
+    new InstrumentedLlmClient(
+        serviceProvider.GetRequiredService<GroqLlmClient>()));
 builder.Services.AddScoped<IAgentTool, GetServiceMetricsTool>();
 builder.Services.AddScoped<IAgentTool, GetRecentLogsTool>();
 builder.Services.AddScoped<ToolExecutor>();
@@ -137,7 +140,10 @@ builder.Services.AddDbContext<IncidentCopilotDbContext>(options =>
 builder.Services.AddScoped<
     IKnowledgeDocumentRepository,
     KnowledgeDocumentRepository>();
-builder.Services.AddScoped<IKnowledgeRetriever, KnowledgeRetriever>();
+builder.Services.AddScoped<KnowledgeRetriever>();
+builder.Services.AddScoped<IKnowledgeRetriever>(serviceProvider =>
+    new InstrumentedKnowledgeRetriever(
+        serviceProvider.GetRequiredService<KnowledgeRetriever>()));
 
 
 if (builder.Environment.IsDevelopment())

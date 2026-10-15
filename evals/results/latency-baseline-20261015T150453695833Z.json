@@ -1,0 +1,605 @@
+{
+  "startedAtUtc": "2026-10-15T15:04:53.695833+00:00",
+  "updatedAtUtc": "2026-10-15T15:18:00.861341+00:00",
+  "baseUrl": "http://localhost:5087",
+  "configuredRunsPerScenario": 10,
+  "pauseSeconds": 20.0,
+  "jitterSeconds": 2.0,
+  "scenarioPauseSeconds": 60.0,
+  "results": [
+    {
+      "scenario": "rag_only",
+      "question": "What symptoms indicate database connection exhaustion?",
+      "requestedRuns": 10,
+      "successfulRuns": 10,
+      "failedRuns": 0,
+      "meanMs": 1931.463449999319,
+      "minMs": 984.4603999990795,
+      "maxMs": 3928.578600000037,
+      "p50Ms": 1804.3144999992364,
+      "p95Ms": 3190.2952799998257,
+      "p99Ms": 3780.921935999995,
+      "meanTimeToFirstEventMs": 1452.4495699994077,
+      "durationsMs": [
+        1592.8464999997232,
+        984.4603999990795,
+        1965.7300999988365,
+        1194.7838999985834,
+        2270.7053999984055,
+        1642.8988999996363,
+        2287.9489999995712,
+        1390.9956999996211,
+        2055.685999999696,
+        3928.578600000037
+      ],
+      "runs": [
+        {
+          "run": 1,
+          "success": true,
+          "durationMs": 1592.8464999997232,
+          "timeToFirstEventMs": 1199.9126999999135,
+          "eventCount": 176,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1592.8464999997232,
+              "timeToFirstEventMs": 1199.9126999999135,
+              "eventCount": 176,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 2,
+          "success": true,
+          "durationMs": 984.4603999990795,
+          "timeToFirstEventMs": 646.916699999565,
+          "eventCount": 155,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 984.4603999990795,
+              "timeToFirstEventMs": 646.916699999565,
+              "eventCount": 155,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 3,
+          "success": true,
+          "durationMs": 1965.7300999988365,
+          "timeToFirstEventMs": 1571.3141999985965,
+          "eventCount": 185,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1965.7300999988365,
+              "timeToFirstEventMs": 1571.3141999985965,
+              "eventCount": 185,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 4,
+          "success": true,
+          "durationMs": 1194.7838999985834,
+          "timeToFirstEventMs": 744.1681999989669,
+          "eventCount": 125,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1194.7838999985834,
+              "timeToFirstEventMs": 744.1681999989669,
+              "eventCount": 125,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 5,
+          "success": true,
+          "durationMs": 2270.7053999984055,
+          "timeToFirstEventMs": 1334.4678999983444,
+          "eventCount": 176,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 2270.7053999984055,
+              "timeToFirstEventMs": 1334.4678999983444,
+              "eventCount": 176,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 6,
+          "success": true,
+          "durationMs": 1642.8988999996363,
+          "timeToFirstEventMs": 1206.6670000003796,
+          "eventCount": 193,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1642.8988999996363,
+              "timeToFirstEventMs": 1206.6670000003796,
+              "eventCount": 193,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 7,
+          "success": true,
+          "durationMs": 2287.9489999995712,
+          "timeToFirstEventMs": 1746.9722000005277,
+          "eventCount": 186,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 2287.9489999995712,
+              "timeToFirstEventMs": 1746.9722000005277,
+              "eventCount": 186,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 8,
+          "success": true,
+          "durationMs": 1390.9956999996211,
+          "timeToFirstEventMs": 934.0996999999334,
+          "eventCount": 217,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1390.9956999996211,
+              "timeToFirstEventMs": 934.0996999999334,
+              "eventCount": 217,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 9,
+          "success": true,
+          "durationMs": 2055.685999999696,
+          "timeToFirstEventMs": 1677.1808999983477,
+          "eventCount": 186,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 2055.685999999696,
+              "timeToFirstEventMs": 1677.1808999983477,
+              "eventCount": 186,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 10,
+          "success": true,
+          "durationMs": 3928.578600000037,
+          "timeToFirstEventMs": 3462.7961999995023,
+          "eventCount": 178,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 3928.578600000037,
+              "timeToFirstEventMs": 3462.7961999995023,
+              "eventCount": 178,
+              "attempt": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "one_tool",
+      "question": "What is OrderService's current p95 latency?",
+      "requestedRuns": 10,
+      "successfulRuns": 10,
+      "failedRuns": 0,
+      "meanMs": 1589.3766499999401,
+      "minMs": 938.3391999999731,
+      "maxMs": 2567.0549999995274,
+      "p50Ms": 1525.9484999996857,
+      "p95Ms": 2361.783945000297,
+      "p99Ms": 2526.0007889996814,
+      "meanTimeToFirstEventMs": 1526.190620000125,
+      "durationsMs": [
+        1443.3137999985775,
+        1861.054699998931,
+        2567.0549999995274,
+        1330.898199999865,
+        1744.5946999996522,
+        1057.4295000005804,
+        1231.6011000002618,
+        1608.583200000794,
+        2110.897100001239,
+        938.3391999999731
+      ],
+      "runs": [
+        {
+          "run": 1,
+          "success": true,
+          "durationMs": 1443.3137999985775,
+          "timeToFirstEventMs": 1409.9552999996376,
+          "eventCount": 15,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1443.3137999985775,
+              "timeToFirstEventMs": 1409.9552999996376,
+              "eventCount": 15,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 2,
+          "success": true,
+          "durationMs": 1861.054699998931,
+          "timeToFirstEventMs": 1825.7881999998062,
+          "eventCount": 15,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1861.054699998931,
+              "timeToFirstEventMs": 1825.7881999998062,
+              "eventCount": 15,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 3,
+          "success": true,
+          "durationMs": 2567.0549999995274,
+          "timeToFirstEventMs": 2442.6884000004065,
+          "eventCount": 16,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 2567.0549999995274,
+              "timeToFirstEventMs": 2442.6884000004065,
+              "eventCount": 16,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 4,
+          "success": true,
+          "durationMs": 1330.898199999865,
+          "timeToFirstEventMs": 1295.08050000004,
+          "eventCount": 15,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1330.898199999865,
+              "timeToFirstEventMs": 1295.08050000004,
+              "eventCount": 15,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 5,
+          "success": true,
+          "durationMs": 1744.5946999996522,
+          "timeToFirstEventMs": 1543.280699999741,
+          "eventCount": 15,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1744.5946999996522,
+              "timeToFirstEventMs": 1543.280699999741,
+              "eventCount": 15,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 6,
+          "success": true,
+          "durationMs": 1057.4295000005804,
+          "timeToFirstEventMs": 1022.9029000001901,
+          "eventCount": 15,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1057.4295000005804,
+              "timeToFirstEventMs": 1022.9029000001901,
+              "eventCount": 15,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 7,
+          "success": true,
+          "durationMs": 1231.6011000002618,
+          "timeToFirstEventMs": 1197.6585000011255,
+          "eventCount": 15,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1231.6011000002618,
+              "timeToFirstEventMs": 1197.6585000011255,
+              "eventCount": 15,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 8,
+          "success": true,
+          "durationMs": 1608.583200000794,
+          "timeToFirstEventMs": 1566.0901999999624,
+          "eventCount": 16,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 1608.583200000794,
+              "timeToFirstEventMs": 1566.0901999999624,
+              "eventCount": 16,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 9,
+          "success": true,
+          "durationMs": 2110.897100001239,
+          "timeToFirstEventMs": 2052.5588000000425,
+          "eventCount": 16,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 2110.897100001239,
+              "timeToFirstEventMs": 2052.5588000000425,
+              "eventCount": 16,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 10,
+          "success": true,
+          "durationMs": 938.3391999999731,
+          "timeToFirstEventMs": 905.902700000297,
+          "eventCount": 18,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 938.3391999999731,
+              "timeToFirstEventMs": 905.902700000297,
+              "eventCount": 18,
+              "attempt": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "investigation",
+      "question": "Check OrderService's current metrics and recent logs and tell me why it is unhealthy.",
+      "requestedRuns": 10,
+      "successfulRuns": 10,
+      "failedRuns": 0,
+      "meanMs": 6223.24628999977,
+      "minMs": 3506.90190000023,
+      "maxMs": 14607.969200000298,
+      "p50Ms": 5262.266049999198,
+      "p95Ms": 11576.112379999897,
+      "p99Ms": 14001.59783600022,
+      "meanTimeToFirstEventMs": 4086.693430000196,
+      "durationsMs": [
+        3849.5963999994274,
+        4065.9021999999823,
+        3506.90190000023,
+        7850.8184000002075,
+        14607.969200000298,
+        5896.858699999939,
+        7870.509599999423,
+        5757.37239999944,
+        4059.374399999797,
+        4767.159699998956
+      ],
+      "runs": [
+        {
+          "run": 1,
+          "success": true,
+          "durationMs": 3849.5963999994274,
+          "timeToFirstEventMs": 2200.285499999154,
+          "eventCount": 786,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 3849.5963999994274,
+              "timeToFirstEventMs": 2200.285499999154,
+              "eventCount": 786,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 2,
+          "success": true,
+          "durationMs": 4065.9021999999823,
+          "timeToFirstEventMs": 2494.1780000008293,
+          "eventCount": 665,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 4065.9021999999823,
+              "timeToFirstEventMs": 2494.1780000008293,
+              "eventCount": 665,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 3,
+          "success": true,
+          "durationMs": 3506.90190000023,
+          "timeToFirstEventMs": 1814.0316999997594,
+          "eventCount": 815,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 3506.90190000023,
+              "timeToFirstEventMs": 1814.0316999997594,
+              "eventCount": 815,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 4,
+          "success": true,
+          "durationMs": 7850.8184000002075,
+          "timeToFirstEventMs": 5978.581800000029,
+          "eventCount": 890,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 7850.8184000002075,
+              "timeToFirstEventMs": 5978.581800000029,
+              "eventCount": 890,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 5,
+          "success": true,
+          "durationMs": 14607.969200000298,
+          "timeToFirstEventMs": 12638.43789999919,
+          "eventCount": 846,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 14607.969200000298,
+              "timeToFirstEventMs": 12638.43789999919,
+              "eventCount": 846,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 6,
+          "success": true,
+          "durationMs": 5896.858699999939,
+          "timeToFirstEventMs": 3933.065400000487,
+          "eventCount": 886,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 5896.858699999939,
+              "timeToFirstEventMs": 3933.065400000487,
+              "eventCount": 886,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 7,
+          "success": true,
+          "durationMs": 7870.509599999423,
+          "timeToFirstEventMs": 5506.725900000674,
+          "eventCount": 965,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 7870.509599999423,
+              "timeToFirstEventMs": 5506.725900000674,
+              "eventCount": 965,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 8,
+          "success": true,
+          "durationMs": 5757.37239999944,
+          "timeToFirstEventMs": 2262.0165000007546,
+          "eventCount": 659,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 5757.37239999944,
+              "timeToFirstEventMs": 2262.0165000007546,
+              "eventCount": 659,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 9,
+          "success": true,
+          "durationMs": 4059.374399999797,
+          "timeToFirstEventMs": 1994.0538000009838,
+          "eventCount": 946,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 4059.374399999797,
+              "timeToFirstEventMs": 1994.0538000009838,
+              "eventCount": 946,
+              "attempt": 1
+            }
+          ]
+        },
+        {
+          "run": 10,
+          "success": true,
+          "durationMs": 4767.159699998956,
+          "timeToFirstEventMs": 2045.557800000097,
+          "eventCount": 963,
+          "attempts": [
+            {
+              "success": true,
+              "statusCode": 200,
+              "durationMs": 4767.159699998956,
+              "timeToFirstEventMs": 2045.557800000097,
+              "eventCount": 963,
+              "attempt": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -20,6 +20,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen();
 
+var developmentOtlpEndpoint = builder.Environment.IsDevelopment()
+    ? new Uri(
+        builder.Configuration["OpenTelemetry:Otlp:Endpoint"]
+            ?? "http://localhost:4317",
+        UriKind.Absolute)
+    : null;
+
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(
@@ -28,20 +35,48 @@ builder.Services
             .GetName()
             .Version?
             .ToString()))
-    .WithTracing(tracing => tracing
-        .AddSource(IncidentCopilotTelemetry.Name)
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddConsoleExporter())
-    .WithMetrics(metrics => metrics
-        .AddMeter(IncidentCopilotTelemetry.Name)
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddConsoleExporter((_, readerOptions) =>
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddSource(IncidentCopilotTelemetry.Name)
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation();
+
+        if (developmentOtlpEndpoint is not null)
         {
-            readerOptions.PeriodicExportingMetricReaderOptions
-                .ExportIntervalMilliseconds = 10_000;
-        }));
+            tracing.AddOtlpExporter(options =>
+                options.Endpoint = developmentOtlpEndpoint);
+        }
+        else
+        {
+            tracing.AddConsoleExporter();
+        }
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddMeter(IncidentCopilotTelemetry.Name)
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation();
+
+        if (developmentOtlpEndpoint is not null)
+        {
+            metrics.AddOtlpExporter((options, readerOptions) =>
+            {
+                options.Endpoint = developmentOtlpEndpoint;
+                readerOptions.PeriodicExportingMetricReaderOptions
+                    .ExportIntervalMilliseconds = 10_000;
+            });
+        }
+        else
+        {
+            metrics.AddConsoleExporter((_, readerOptions) =>
+            {
+                readerOptions.PeriodicExportingMetricReaderOptions
+                    .ExportIntervalMilliseconds = 10_000;
+            });
+        }
+    });
 
 builder.Services
     .AddOptions<GroqOptions>()

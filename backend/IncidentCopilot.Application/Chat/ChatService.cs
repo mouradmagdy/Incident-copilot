@@ -1,5 +1,6 @@
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Knowledge;
+using IncidentCopilot.Application.Observability;
 using IncidentCopilot.Core.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -161,16 +162,27 @@ public sealed class ChatService : IChatService
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var llmStopwatch = Stopwatch.StartNew();
+        using var activity = IncidentCopilotTelemetry.ActivitySource
+            .StartActivity(
+                "incidentcopilot.agent.run",
+                ActivityKind.Internal);
+        activity?.SetTag(
+            "rag.has_relevant_documentation",
+            hasRelevantDocumentation);
+
+        var completedRounds = 0;
+        var outcome = "error";
+        var toolExchanges = new List<LlmToolExchange>();
 
         try
         {
             var toolDefinitions = _agentTools.Values
                 .Select(tool => tool.Definition)
                 .ToArray();
-            var toolExchanges = new List<LlmToolExchange>();
 
             for (var round = 1; round <= MaxAgentRounds; round++)
             {
+                completedRounds = round;
                 _logger.LogInformation(
                     "Agent round {AgentRound}/{MaxAgentRounds} started. Completed tool calls: {CompletedToolCallCount}.",
                     round,
@@ -231,6 +243,7 @@ public sealed class ChatService : IChatService
                                 : "Response path: scope refusal. No RAG context or tool call was available.");
                     }
 
+                    outcome = "success";
                     yield break;
                 }
 
@@ -246,6 +259,7 @@ public sealed class ChatService : IChatService
                         "Agent stopped after reaching the maximum of {MaxAgentRounds} rounds. The final requested tool {ToolName} was not executed.",
                         MaxAgentRounds,
                         requestedToolCall.Name);
+                    outcome = "round_limit";
                     yield return AgentRoundLimitMessage;
                     yield break;
                 }
@@ -319,6 +333,31 @@ public sealed class ChatService : IChatService
         finally
         {
             llmStopwatch.Stop();
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                outcome = "cancelled";
+            }
+
+            activity?.SetTag("agent.outcome", outcome);
+            activity?.SetTag("agent.round_count", completedRounds);
+            activity?.SetTag("agent.tool_call_count", toolExchanges.Count);
+
+            if (outcome is not "success")
+            {
+                activity?.SetStatus(ActivityStatusCode.Error);
+            }
+
+            var tags = new TagList
+            {
+                { "agent.outcome", outcome }
+            };
+
+            IncidentCopilotTelemetry.AgentRuns.Add(1, tags);
+            IncidentCopilotTelemetry.AgentDuration.Record(
+                llmStopwatch.Elapsed.TotalSeconds,
+                tags);
+
             _logger.LogInformation(
                 "LLM duration: {LlmDurationMs:F0} ms.",
                 llmStopwatch.Elapsed.TotalMilliseconds);

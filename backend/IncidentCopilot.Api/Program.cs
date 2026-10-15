@@ -2,6 +2,7 @@ using IncidentCopilot.Api.Endpoints;
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Knowledge;
+using IncidentCopilot.Application.Observability;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
 using IncidentCopilot.Infrastructure.AI.Tools.GetRecentLogs;
@@ -10,11 +11,37 @@ using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Pgvector.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen();
+
+builder.Services
+    .AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(
+        serviceName: "IncidentCopilot.Api",
+        serviceVersion: typeof(Program).Assembly
+            .GetName()
+            .Version?
+            .ToString()))
+    .WithTracing(tracing => tracing
+        .AddSource(IncidentCopilotTelemetry.Name)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddConsoleExporter())
+    .WithMetrics(metrics => metrics
+        .AddMeter(IncidentCopilotTelemetry.Name)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddConsoleExporter((_, readerOptions) =>
+        {
+            readerOptions.PeriodicExportingMetricReaderOptions
+                .ExportIntervalMilliseconds = 10_000;
+        }));
 
 builder.Services
     .AddOptions<GroqOptions>()

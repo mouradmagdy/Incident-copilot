@@ -79,9 +79,10 @@ public sealed class GetRecentLogsTool : IAgentTool
         });
 
     public async Task<ToolResult> ExecuteAsync(
-        string argumentsJson,
+        ToolExecutionContext context,
         CancellationToken cancellationToken)
     {
+        var argumentsJson = context.ArgumentsJson;
         if (_faultInjector.CurrentFault == ToolFault.LogsTimeout)
         {
             await Task.Delay(
@@ -193,4 +194,7 @@ public sealed class GetRecentLogsTool : IAgentTool
             true,
             JsonSerializer.Serialize(response, SerializerOptions));
     }
+
+    public ToolExecutionMode ExecutionMode => ToolExecutionMode.ReadOnly;
+
 }

@@ -55,9 +55,10 @@ public sealed class GetServiceMetricsTool : IAgentTool
         });
 
     public async Task<ToolResult> ExecuteAsync(
-        string argumentsJson,
+        ToolExecutionContext context,
         CancellationToken cancellationToken)
     {
+        var argumentsJson = context.ArgumentsJson;
         if (_faultInjector.CurrentFault == ToolFault.MetricsTimeout)
         {
             await Task.Delay(
@@ -133,4 +134,6 @@ public sealed class GetServiceMetricsTool : IAgentTool
             true,
             JsonSerializer.Serialize(metric, SerializerOptions));
     }
+
+    public ToolExecutionMode ExecutionMode => ToolExecutionMode.ReadOnly;
 }

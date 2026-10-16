@@ -1,5 +1,5 @@
 namespace IncidentCopilot.Application.Chat;
 
 public sealed record ChatStreamResponse(
-    IAsyncEnumerable<string> Content,
+    IAsyncEnumerable<ChatStreamEvent> Events,
     IReadOnlyList<ChatSource> Sources);

@@ -36,6 +36,9 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<Guid?>("PendingActionId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("ResolvedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -58,6 +61,9 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PendingActionId")
+                        .IsUnique();
 
                     b.HasIndex("Status", "StartedAtUtc")
                         .IsDescending(false, true);
@@ -191,6 +197,51 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("Services");
                 });
 
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.PendingAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ArgumentsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ResultJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("ToolName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status", "CreatedAtUtc");
+
+                    b.ToTable("PendingActions");
+                });
+
             modelBuilder.Entity("IncidentCopilot.Core.Entities.ServiceMetric", b =>
                 {
                     b.Property<long>("Id")
@@ -235,6 +286,14 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .IsDescending(false, true);
 
                     b.ToTable("ServiceMetrics");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.Incident", b =>
+                {
+                    b.HasOne("IncidentCopilot.Core.Entities.PendingAction", null)
+                        .WithMany()
+                        .HasForeignKey("PendingActionId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("IncidentCopilot.Core.Entities.KnowledgeDocumentChunk", b =>

@@ -29,6 +29,14 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
         builder.Property(incident => incident.RootCause)
             .HasMaxLength(4_000);
 
+        builder.HasIndex(incident => incident.PendingActionId)
+            .IsUnique();
+
+        builder.HasOne<PendingAction>()
+            .WithMany()
+            .HasForeignKey(incident => incident.PendingActionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(incident => new { incident.Status, incident.StartedAtUtc })
             .IsDescending(false, true);
     }

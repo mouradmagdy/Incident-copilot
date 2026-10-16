@@ -1,4 +1,5 @@
 using IncidentCopilot.Api.Contracts.Chat;
+using IncidentCopilot.Api.Contracts.PendingActions;
 using IncidentCopilot.Application.Chat;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -33,12 +34,32 @@ public sealed class ChatController : ControllerBase
         Response.Headers.CacheControl = "no-cache";
         Response.Headers.Append("X-Accel-Buffering", "no");
 
-        await foreach (var content in response.Content
+        await foreach (var chatEvent in response.Events
             .WithCancellation(cancellationToken))
         {
-            await WriteEventAsync(
-                new { type = "delta", content },
-                cancellationToken);
+            switch (chatEvent)
+            {
+                case ChatDeltaEvent delta:
+                    await WriteEventAsync(
+                        new
+                        {
+                            type = "delta",
+                            content = delta.Content
+                        },
+                        cancellationToken);
+                    break;
+
+                case ChatPendingActionEvent pending:
+                    await WriteEventAsync(
+                        new
+                        {
+                            type = "pending_action",
+                            action = PendingActionResponse.From(
+                                pending.Action)
+                        },
+                        cancellationToken);
+                    break;
+            }
         }
 
         await WriteEventAsync(

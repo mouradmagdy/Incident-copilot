@@ -10,9 +10,11 @@ public sealed class ToolExecutor
 
     public async Task<ToolResult> ExecuteAsync(
         IAgentTool tool,
-        string argumentsJson,
+        ToolExecutionContext context,
         CancellationToken requestCancellationToken)
     {
+        var argumentsJson = context.ArgumentsJson;
+
         using var activity = IncidentCopilotTelemetry.ActivitySource
             .StartActivity(
                 "incidentcopilot.tool.execute",
@@ -31,7 +33,7 @@ public sealed class ToolExecutor
         try
         {
             var result = await tool.ExecuteAsync(
-                argumentsJson,
+                context,
                 timeoutCts.Token);
             outcome = result.Success ? "success" : "failure";
             return result;

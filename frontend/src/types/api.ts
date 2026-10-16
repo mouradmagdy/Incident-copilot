@@ -48,3 +48,20 @@ export interface ChatSource {
   fileName: string
   section: string | null
 }
+
+export type PendingActionStatus =
+  | 'Pending'
+  | 'Completed'
+  | 'Cancelled'
+  | 'Failed'
+
+export interface PendingAction {
+  id: string
+  toolName: string
+  description: string
+  status: PendingActionStatus
+  createdAtUtc: string
+  decidedAtUtc: string | null
+  resultJson: string | null
+  error: string | null
+}

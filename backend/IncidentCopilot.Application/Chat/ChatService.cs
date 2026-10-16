@@ -1,6 +1,7 @@
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Application.Observability;
+using IncidentCopilot.Application.PendingActions;
 using IncidentCopilot.Core.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -28,23 +29,32 @@ public sealed class ChatService : IChatService
     private readonly ILogger<ChatService> _logger;
     private readonly ChatDiagnosticsOptions _diagnosticsOptions;
     private readonly IReadOnlyDictionary<string, IAgentTool> _agentTools;
+    private readonly IReadOnlyDictionary<string, IToolApprovalPolicy>
+        _approvalPolicies;
     private readonly ToolExecutor _toolExecutor;
+    private readonly IPendingActionService _pendingActionService;
 
     public ChatService(
         IKnowledgeRetriever retriever,
         ILlmClient llmClient,
         IEnumerable<IAgentTool> agentTools,
+        IEnumerable<IToolApprovalPolicy> approvalPolicies,
         ToolExecutor toolExecutor,
+        IPendingActionService pendingActionService,
         ILogger<ChatService> logger,
         IOptions<ChatDiagnosticsOptions> diagnosticsOptions)
     {
         _retriever = retriever;
         _llmClient = llmClient;
         _toolExecutor = toolExecutor;
+        _pendingActionService = pendingActionService;
         _logger = logger;
         _diagnosticsOptions = diagnosticsOptions.Value;
         _agentTools = agentTools.ToDictionary(
             tool => tool.Name,
+            StringComparer.Ordinal);
+        _approvalPolicies = approvalPolicies.ToDictionary(
+            policy => policy.ToolName,
             StringComparer.Ordinal);
 
         if (_agentTools.Count == 0)
@@ -74,16 +84,26 @@ public sealed class ChatService : IChatService
             toolCalls,
             cancellationToken);
         var content = new StringBuilder();
+        PendingActionView? pendingAction = null;
 
-        await foreach (var chunk in response.Content
+        await foreach (var streamEvent in response.Events
             .WithCancellation(cancellationToken))
         {
-            content.Append(chunk);
+            switch (streamEvent)
+            {
+                case ChatDeltaEvent delta:
+                    content.Append(delta.Content);
+                    break;
+                case ChatPendingActionEvent pending:
+                    pendingAction = pending.Action;
+                    break;
+            }
         }
 
         return new AgentRunResult(
             content.ToString(),
-            toolCalls.ToArray());
+            toolCalls.ToArray(),
+            pendingAction);
     }
 
     private async Task<ChatStreamResponse> PrepareAgentStreamAsync(
@@ -154,7 +174,7 @@ public sealed class ChatService : IChatService
             sources);
     }
 
-    private async IAsyncEnumerable<string> StreamResponseAsync(
+    private async IAsyncEnumerable<ChatStreamEvent> StreamResponseAsync(
         string systemPrompt,
         string message,
         bool hasRelevantDocumentation,
@@ -205,7 +225,7 @@ public sealed class ChatService : IChatService
                     if (!string.IsNullOrEmpty(streamEvent.Content))
                     {
                         streamedContent = true;
-                        yield return streamEvent.Content;
+                        yield return new ChatDeltaEvent(streamEvent.Content);
                     }
 
                     if (streamEvent.ToolCall is not null)
@@ -260,7 +280,8 @@ public sealed class ChatService : IChatService
                         MaxAgentRounds,
                         requestedToolCall.Name);
                     outcome = "round_limit";
-                    yield return AgentRoundLimitMessage;
+                    yield return new ChatDeltaEvent(
+                        AgentRoundLimitMessage);
                     yield break;
                 }
 
@@ -285,13 +306,67 @@ public sealed class ChatService : IChatService
                     requestedToolCall.Name,
                     FormatJson(requestedToolCall.ArgumentsJson));
 
+                if (requestedTool.ExecutionMode ==
+                    ToolExecutionMode.RequiresApproval)
+                {
+                    if (_approvalPolicies.TryGetValue(
+                            requestedTool.Name,
+                            out var approvalPolicy))
+                    {
+                        var decision = approvalPolicy.Evaluate(
+                            requestedToolCall.ArgumentsJson,
+                            toolExchanges);
+
+                        if (!decision.Allowed)
+                        {
+                            _logger.LogInformation(
+                                "Tool proposal {ToolName} was rejected by policy: {RejectionReason}",
+                                requestedTool.Name,
+                                decision.Reason);
+
+                            toolExchanges.Add(new LlmToolExchange(
+                                requestedToolCall,
+                                JsonSerializer.Serialize(new
+                                {
+                                    approvalAllowed = false,
+                                    reason = decision.Reason,
+                                    responseInstruction =
+                                        "Answer the user directly from the runtime evidence. " +
+                                        "Do not mention the attempted tool call, approval " +
+                                        "policy, rejection, or internal thresholds."
+                                })));
+
+                            continue;
+                        }
+                    }
+
+                    var pendingAction = await _pendingActionService
+                        .CreateAsync(
+                            requestedTool.Name,
+                            requestedToolCall.ArgumentsJson,
+                            requestedTool.GetApprovalDescription(
+                                requestedToolCall.ArgumentsJson),
+                            cancellationToken);
+
+                    _logger.LogInformation(
+                        "Tool {ToolName} requires approval. Pending action {PendingActionId} was created.",
+                        requestedTool.Name,
+                        pendingAction.Id);
+
+                    outcome = "pending_approval";
+                    yield return new ChatPendingActionEvent(
+                        pendingAction);
+                    yield break;
+                }
+
                 ToolResult toolResult;
 
                 try
                 {
                     toolResult = await _toolExecutor.ExecuteAsync(
                         requestedTool,
-                        requestedToolCall.ArgumentsJson,
+                        new ToolExecutionContext(
+                            requestedToolCall.ArgumentsJson),
                         cancellationToken);
                 }
                 catch (Exception exception)
@@ -452,9 +527,47 @@ public sealed class ChatService : IChatService
             I can only help with questions about the monitored systems and the
             supplied internal documentation.
 
-            You have access to tools for obtaining live system information.
+            You have access to read-only tools and tools that can change system
+            state.
 
-            Use tools when the user's question requires current runtime data.
+            Use read-only tools when you need current runtime evidence.
+
+            If a state-changing tool is appropriate, you may request it, but
+            the action requires explicit user approval before execution.
+
+            Requesting an approval-required tool creates a pending proposal; it
+            does not execute the state change. The application will show the
+            user Confirm and Cancel controls for that proposal.
+
+            When the user asks for a state change conditionally and the runtime
+            evidence satisfies that condition, request the appropriate tool in
+            the same agent run. Never ask the user to confirm in ordinary text,
+            and never say "would you like me to" perform the action. Request the
+            tool so the application can collect confirmation through its
+            approval controls.
+
+            If an approval policy rejects a proposal, do not request the same
+            state-changing tool again. Treat that rejection as an internal
+            control signal. Do not mention an attempted action, approval policy,
+            policy rejection, guard, or internal threshold to the user. Instead,
+            answer naturally from the runtime evidence and state that no
+            incident is needed at this time.
+
+            In the final answer, cite only evidence actually returned by tools
+            in this agent run. Do not mention logs unless get_recent_logs
+            completed successfully and returned those logs. Do not describe a
+            metric as degraded when its returned value is within the healthy
+            range.
+
+            Do not claim that a state-changing action happened merely because
+            you requested the tool. Only state that it completed after a
+            successful confirmed execution result.
+
+            Before proposing an incident, obtain current runtime evidence using
+            read-only tools. Propose create_incident only when that evidence
+            shows that a monitored service is unhealthy. Do not propose an
+            incident when current evidence is healthy, unavailable, or based
+            only on static documentation.
 
             You may use tools over multiple rounds. After each tool result,
             decide whether another tool is needed. When you have enough

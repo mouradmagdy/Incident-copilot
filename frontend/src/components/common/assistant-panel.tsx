@@ -8,7 +8,15 @@ import { AssistantMessage } from './assistant-message'
 
 export function AssistantPanel() {
   const [draft, setDraft] = useState('')
-  const { messages, sendMessage, isPending, isError } = useChat()
+  const {
+    messages,
+    sendMessage,
+    isPending,
+    isError,
+    decidePendingAction,
+    pendingActionInFlightId,
+    pendingActionErrorId,
+  } = useChat()
   const setAssistantOpen = useUiStore((state) => state.setAssistantOpen)
 
   function submitMessage(event: FormEvent<HTMLFormElement>) {
@@ -48,7 +56,13 @@ export function AssistantPanel() {
         )}
 
         {messages.map((message) => (
-          <AssistantMessage key={message.id} message={message} />
+          <AssistantMessage
+            key={message.id}
+            message={message}
+            pendingActionInFlightId={pendingActionInFlightId}
+            pendingActionErrorId={pendingActionErrorId}
+            onPendingActionDecision={decidePendingAction}
+          />
         ))}
 
         {isPending && (

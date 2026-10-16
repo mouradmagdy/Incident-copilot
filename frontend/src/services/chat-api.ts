@@ -1,8 +1,9 @@
 import { ApiError } from './base-api-service'
-import type { ChatSource } from '../types/api'
+import type { ChatSource, PendingAction } from '../types/api'
 
 export type ChatStreamEvent =
   | { type: 'delta'; content: string }
+  | { type: 'pending_action'; action: PendingAction }
   | { type: 'sources'; sources: ChatSource[] }
 
 export const chatApi = {

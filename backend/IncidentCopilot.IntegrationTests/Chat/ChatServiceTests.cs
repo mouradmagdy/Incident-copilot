@@ -1,6 +1,7 @@
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Knowledge;
+using IncidentCopilot.Application.PendingActions;
 using IncidentCopilot.Core.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -26,7 +27,7 @@ public sealed class ChatServiceTests
 
         Assert.Equal(
             [refusal],
-            await ReadAllAsync(response.Content));
+            await ReadAllAsync(response.Events));
         Assert.Empty(response.Sources);
         var initialRequest = Assert.Single(llmClient.AgentRoundRequests);
         Assert.Contains(
@@ -34,6 +35,18 @@ public sealed class ChatServiceTests
             initialRequest.SystemPrompt);
         Assert.Contains(
             "Your scope is limited to the monitored",
+            initialRequest.SystemPrompt);
+        Assert.Contains(
+            "Never ask the user to confirm in ordinary text",
+            initialRequest.SystemPrompt);
+        Assert.Contains(
+            "Confirm and Cancel controls",
+            initialRequest.SystemPrompt);
+        Assert.Contains(
+            "Treat that rejection as an internal",
+            initialRequest.SystemPrompt);
+        Assert.Contains(
+            "Do not mention logs unless get_recent_logs",
             initialRequest.SystemPrompt);
         Assert.Equal(0, tool.ExecutionCount);
     }
@@ -67,7 +80,7 @@ public sealed class ChatServiceTests
 
         Assert.Equal(
             ["OrderService has recent error logs."],
-            await ReadAllAsync(response.Content));
+            await ReadAllAsync(response.Events));
         Assert.Equal(0, metricsTool.ExecutionCount);
         Assert.Equal(1, recentLogsTool.ExecutionCount);
         Assert.Equal(arguments, recentLogsTool.LastArgumentsJson);
@@ -192,7 +205,7 @@ public sealed class ChatServiceTests
 
         Assert.Equal(
             ["I couldn't complete the investigation within the maximum of 5 agent rounds."],
-            await ReadAllAsync(response.Content));
+            await ReadAllAsync(response.Events));
         Assert.Equal(5, llmClient.AgentRoundRequests.Count);
         Assert.Equal(4, tool.ExecutionCount);
         Assert.Equal(
@@ -201,26 +214,177 @@ public sealed class ChatServiceTests
                 .Select(request => request.ToolExchanges.Count));
     }
 
+    [Fact]
+    public async Task RunAgentAsync_WhenUnhealthyMetricsLeadToIncidentProposal_ReturnsPendingActionWithoutExecutingIt()
+    {
+        var metricsCall = new LlmToolCall(
+            "call_metrics",
+            "get_service_metrics",
+            "{\"serviceName\":\"OrderService\"}");
+        var createIncidentCall = new LlmToolCall(
+            "call_incident",
+            "create_incident",
+            "{\"serviceName\":\"OrderService\",\"title\":\"OrderService error spike\",\"description\":\"Error rate is 18%.\",\"severity\":\"High\"}");
+        var llmClient = new FakeLlmClient(
+            new LlmTurnResponse(null, [metricsCall]),
+            new LlmTurnResponse(null, [createIncidentCall]));
+        var metricsTool = new FakeAgentTool(
+            "get_service_metrics",
+            new ToolResult(
+                true,
+                "{\"serviceName\":\"OrderService\",\"averageLatencyMs\":1800,\"p95LatencyMs\":3200,\"errorRatePercent\":18,\"queueDepth\":80,\"activeDbConnections\":98}"));
+        var createIncidentTool = new FakeAgentTool(
+            "create_incident",
+            executionMode: ToolExecutionMode.RequiresApproval);
+        var pendingActions = new FakePendingActionService();
+        var service = CreateService(
+            llmClient,
+            pendingActions,
+            metricsTool,
+            createIncidentTool);
+
+        var result = await service.RunAgentAsync(
+            "Investigate OrderService and create an incident if it is unhealthy.",
+            CancellationToken.None);
+
+        Assert.Equal(1, metricsTool.ExecutionCount);
+        Assert.Equal(0, createIncidentTool.ExecutionCount);
+        Assert.Single(result.ToolCalls);
+        Assert.NotNull(result.PendingAction);
+        Assert.Equal("create_incident", result.PendingAction.ToolName);
+        Assert.Equal(
+            createIncidentCall.ArgumentsJson,
+            Assert.Single(pendingActions.CreatedActions).ArgumentsJson);
+    }
+
+    [Fact]
+    public async Task RunAgentAsync_WhenMetricsAreHealthy_DoesNotProposeIncident()
+    {
+        var metricsCall = new LlmToolCall(
+            "call_metrics",
+            "get_service_metrics",
+            "{\"serviceName\":\"OrderService\"}");
+        var llmClient = new FakeLlmClient(
+            new LlmTurnResponse(null, [metricsCall]),
+            new LlmTurnResponse(
+                "OrderService is healthy; no incident is needed.",
+                []));
+        var metricsTool = new FakeAgentTool(
+            "get_service_metrics",
+            new ToolResult(true, "{\"errorRatePercent\":0.1}"));
+        var createIncidentTool = new FakeAgentTool(
+            "create_incident",
+            executionMode: ToolExecutionMode.RequiresApproval);
+        var pendingActions = new FakePendingActionService();
+        var service = CreateService(
+            llmClient,
+            pendingActions,
+            metricsTool,
+            createIncidentTool);
+
+        var result = await service.RunAgentAsync(
+            "Investigate OrderService and create an incident if it is unhealthy.",
+            CancellationToken.None);
+
+        Assert.Equal(
+            "OrderService is healthy; no incident is needed.",
+            result.Content);
+        Assert.Equal(1, metricsTool.ExecutionCount);
+        Assert.Equal(0, createIncidentTool.ExecutionCount);
+        Assert.Null(result.PendingAction);
+        Assert.Empty(pendingActions.CreatedActions);
+    }
+
+    [Fact]
+    public async Task RunAgentAsync_WhenModelProposesIncidentForHealthyMetrics_PolicyRejectsProposal()
+    {
+        var metricsCall = new LlmToolCall(
+            "call_metrics",
+            "get_service_metrics",
+            "{\"serviceName\":\"OrderService\"}");
+        var createIncidentCall = new LlmToolCall(
+            "call_incident",
+            "create_incident",
+            "{\"serviceName\":\"OrderService\",\"title\":\"OrderService issue\",\"severity\":\"High\"}");
+        var llmClient = new FakeLlmClient(
+            new LlmTurnResponse(null, [metricsCall]),
+            new LlmTurnResponse(null, [createIncidentCall]),
+            new LlmTurnResponse(
+                "OrderService is healthy, so no incident was proposed.",
+                []));
+        var metricsTool = new FakeAgentTool(
+            "get_service_metrics",
+            new ToolResult(
+                true,
+                "{\"serviceName\":\"OrderService\",\"averageLatencyMs\":220,\"p95LatencyMs\":410,\"errorRatePercent\":0.4,\"queueDepth\":12,\"activeDbConnections\":25}"));
+        var createIncidentTool = new FakeAgentTool(
+            "create_incident",
+            executionMode: ToolExecutionMode.RequiresApproval);
+        var pendingActions = new FakePendingActionService();
+        var service = CreateService(
+            llmClient,
+            pendingActions,
+            metricsTool,
+            createIncidentTool);
+
+        var result = await service.RunAgentAsync(
+            "Investigate OrderService and create an incident if it is unhealthy.",
+            CancellationToken.None);
+
+        Assert.Equal(
+            "OrderService is healthy, so no incident was proposed.",
+            result.Content);
+        Assert.Null(result.PendingAction);
+        Assert.Empty(pendingActions.CreatedActions);
+        Assert.Equal(0, createIncidentTool.ExecutionCount);
+        Assert.Equal(3, llmClient.AgentRoundRequests.Count);
+        var rejection = Assert.Single(
+            llmClient.AgentRoundRequests[2].ToolExchanges,
+            exchange =>
+                exchange.ToolCall.Name == "create_incident");
+        Assert.Contains("approvalAllowed", rejection.ToolResult);
+        Assert.Contains("false", rejection.ToolResult);
+        Assert.Contains(
+            "Do not mention the attempted tool call",
+            rejection.ToolResult);
+    }
+
     private static ChatService CreateService(
         ILlmClient llmClient,
+        params IAgentTool[] tools)
+    {
+        return CreateService(
+            llmClient,
+            new FakePendingActionService(),
+            tools);
+    }
+
+    private static ChatService CreateService(
+        ILlmClient llmClient,
+        IPendingActionService pendingActionService,
         params IAgentTool[] tools)
     {
         return new ChatService(
             new EmptyKnowledgeRetriever(),
             llmClient,
             tools,
+            [new CreateIncidentApprovalPolicy()],
             new ToolExecutor(),
+            pendingActionService,
             NullLogger<ChatService>.Instance,
             Options.Create(new ChatDiagnosticsOptions()));
     }
 
     private static async Task<IReadOnlyList<string>> ReadAllAsync(
-        IAsyncEnumerable<string> content)
+        IAsyncEnumerable<ChatStreamEvent> events)
     {
         var result = new List<string>();
-        await foreach (var item in content)
+        await foreach (var item in events)
         {
-            result.Add(item);
+            if (item is ChatDeltaEvent delta)
+            {
+                result.Add(delta.Content);
+            }
         }
 
         return result;
@@ -243,10 +407,13 @@ public sealed class ChatServiceTests
 
         public FakeAgentTool(
             string name = "get_service_metrics",
-            ToolResult? result = null)
+            ToolResult? result = null,
+            ToolExecutionMode executionMode =
+                ToolExecutionMode.ReadOnly)
         {
             Name = name;
             _result = result ?? new ToolResult(true, "{}");
+            ExecutionMode = executionMode;
         }
 
         public string Name { get; }
@@ -256,18 +423,69 @@ public sealed class ChatServiceTests
             "Gets current service metrics.",
             new { type = "object" });
 
+        public ToolExecutionMode ExecutionMode { get; }
+
         public int ExecutionCount { get; private set; }
 
         public string? LastArgumentsJson { get; private set; }
 
         public Task<ToolResult> ExecuteAsync(
-            string argumentsJson,
+            ToolExecutionContext context,
             CancellationToken cancellationToken)
         {
             ExecutionCount++;
-            LastArgumentsJson = argumentsJson;
+            LastArgumentsJson = context.ArgumentsJson;
             return Task.FromResult(_result);
         }
+    }
+
+    private sealed class FakePendingActionService
+        : IPendingActionService
+    {
+        public List<CreatedPendingAction> CreatedActions { get; } = [];
+
+        public Task<PendingActionView> CreateAsync(
+            string toolName,
+            string argumentsJson,
+            string description,
+            CancellationToken cancellationToken = default)
+        {
+            var action = new PendingActionView(
+                Guid.NewGuid(),
+                toolName,
+                description,
+                "Pending",
+                DateTime.UtcNow,
+                null,
+                null,
+                null);
+
+            CreatedActions.Add(new CreatedPendingAction(
+                toolName,
+                argumentsJson,
+                description));
+
+            return Task.FromResult(action);
+        }
+
+        public Task<PendingActionView?> ConfirmAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<PendingActionView?> CancelAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public sealed record CreatedPendingAction(
+            string ToolName,
+            string ArgumentsJson,
+            string Description);
     }
 
     private sealed class FakeLlmClient : ILlmClient

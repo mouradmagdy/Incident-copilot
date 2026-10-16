@@ -1,13 +1,18 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { chatApi } from '../../services/chat-api'
-import type { ChatSource } from '../../types/api'
+import {
+  pendingActionsApi,
+  type PendingActionDecision,
+} from '../../services/pending-actions-api'
+import type { ChatSource, PendingAction } from '../../types/api'
 
 export interface ChatMessage {
   id: number
   role: 'user' | 'assistant'
   content: string
   sources?: ChatSource[]
+  pendingAction?: PendingAction
 }
 
 let nextMessageId = 1
@@ -40,6 +45,26 @@ export function useChat() {
             )
           }
 
+          if (event.type === 'pending_action') {
+            if (!assistantMessage) {
+              return [
+                ...current,
+                {
+                  id: assistantId,
+                  role: 'assistant',
+                  content: '',
+                  pendingAction: event.action,
+                },
+              ]
+            }
+
+            return current.map((item) =>
+              item.id === assistantId
+                ? { ...item, pendingAction: event.action }
+                : item,
+            )
+          }
+
           return current.map((item) =>
             item.id === assistantId
               ? { ...item, sources: event.sources }
@@ -47,6 +72,25 @@ export function useChat() {
           )
         })
       })
+    },
+  })
+
+  const actionMutation = useMutation({
+    mutationFn: ({
+      id,
+      decision,
+    }: {
+      id: string
+      decision: PendingActionDecision
+    }) => pendingActionsApi.decide(id, decision),
+    onSuccess: (action) => {
+      setMessages((current) =>
+        current.map((message) =>
+          message.pendingAction?.id === action.id
+            ? { ...message, pendingAction: action }
+            : message,
+        ),
+      )
     },
   })
 
@@ -65,10 +109,25 @@ export function useChat() {
     return true
   }
 
+  function decidePendingAction(
+    id: string,
+    decision: PendingActionDecision,
+  ) {
+    if (actionMutation.isPending) return
+    actionMutation.mutate({ id, decision })
+  }
+
   return {
     messages,
     sendMessage,
     isPending: mutation.isPending,
     isError: mutation.isError,
+    decidePendingAction,
+    pendingActionInFlightId: actionMutation.isPending
+      ? actionMutation.variables?.id
+      : undefined,
+    pendingActionErrorId: actionMutation.isError
+      ? actionMutation.variables?.id
+      : undefined,
   }
 }

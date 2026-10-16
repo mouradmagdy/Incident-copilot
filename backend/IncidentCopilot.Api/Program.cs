@@ -3,10 +3,12 @@ using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Application.Observability;
+using IncidentCopilot.Application.PendingActions;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.AI;
 using IncidentCopilot.Infrastructure.AI.Tools.GetRecentLogs;
 using IncidentCopilot.Infrastructure.AI.Tools.GetServiceMetrics;
+using IncidentCopilot.Infrastructure.AI.Tools.CreateIncident;
 using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
@@ -109,10 +111,17 @@ builder.Services.AddScoped<ILlmClient>(serviceProvider =>
         serviceProvider.GetRequiredService<GroqLlmClient>()));
 builder.Services.AddScoped<IAgentTool, GetServiceMetricsTool>();
 builder.Services.AddScoped<IAgentTool, GetRecentLogsTool>();
+builder.Services.AddScoped<IAgentTool, CreateIncidentTool>();
 builder.Services.AddScoped<ToolExecutor>();
+builder.Services.AddSingleton<
+    IToolApprovalPolicy,
+    CreateIncidentApprovalPolicy>();
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
 builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<
+    IPendingActionService,
+    PendingActionService>();
 
 builder.Services
     .AddOptions<ChatDiagnosticsOptions>()

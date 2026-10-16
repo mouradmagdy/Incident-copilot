@@ -24,5 +24,6 @@ namespace IncidentCopilot.Core.Entities
         public DateTime? ResolvedAtUtc { get; set; }
 
         public string? RootCause { get; set; }
+        public Guid? PendingActionId { get; set; }
     }
 }

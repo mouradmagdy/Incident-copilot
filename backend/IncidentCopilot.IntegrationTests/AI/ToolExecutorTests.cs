@@ -11,7 +11,7 @@ public sealed class ToolExecutorTests
         var executor = new ToolExecutor();
         var result = await executor.ExecuteAsync(
             new DelayingTool(),
-            "{}",
+            new ToolExecutionContext("{}"),
             CancellationToken.None);
 
         Assert.False(result.Success);
@@ -29,7 +29,7 @@ public sealed class ToolExecutorTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => executor.ExecuteAsync(
                 new DelayingTool(),
-                "{}",
+                new ToolExecutionContext("{}"),
                 cancellation.Token));
     }
 
@@ -37,13 +37,16 @@ public sealed class ToolExecutorTests
     {
         public string Name => "slow_tool";
 
+        public ToolExecutionMode ExecutionMode =>
+            ToolExecutionMode.ReadOnly;
+
         public ToolDefinition Definition => new(
             Name,
             "A tool that waits until cancelled.",
             new { type = "object" });
 
         public async Task<ToolResult> ExecuteAsync(
-            string argumentsJson,
+            ToolExecutionContext context,
             CancellationToken cancellationToken)
         {
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);

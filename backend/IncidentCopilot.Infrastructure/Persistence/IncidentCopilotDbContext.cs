@@ -19,6 +19,8 @@ public class IncidentCopilotDbContext : DbContext
 
     public DbSet<Incident> Incidents => Set<Incident>();
 
+    public DbSet<PendingAction> PendingActions => Set<PendingAction>();
+
     public DbSet<KnowledgeDocument> KnowledgeDocuments =>
         Set<KnowledgeDocument>();
 

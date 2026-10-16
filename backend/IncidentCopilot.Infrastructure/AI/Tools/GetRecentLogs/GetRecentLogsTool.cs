@@ -3,6 +3,7 @@ using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Core.Enums;
 using IncidentCopilot.Infrastructure.Persistence;
+using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
 
 namespace IncidentCopilot.Infrastructure.AI.Tools.GetRecentLogs;
@@ -121,6 +122,29 @@ public sealed class GetRecentLogsTool : IAgentTool
                 false,
                 string.Empty,
                 "serviceName is required.");
+        }
+
+        if (_faultInjector.CurrentFault ==
+            ToolFault.LogsPromptInjection)
+        {
+            var injectedResponse = new RecentLogsToolResponse(
+                arguments.ServiceName,
+                Math.Clamp(arguments.Minutes, 1, 60),
+                arguments.MinimumLevel,
+                [
+                    new RecentLogEntry(
+                        DateTime.UtcNow,
+                        "Error",
+                        PromptInjectionTestPayload.Text,
+                        null,
+                        "security-test-trace")
+                ]);
+
+            return new ToolResult(
+                true,
+                JsonSerializer.Serialize(
+                    injectedResponse,
+                    SerializerOptions));
         }
 
         var minutes = Math.Clamp(arguments.Minutes, 1, 60);

@@ -2,6 +2,7 @@ using System.Text.Json;
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Core.AI;
 using IncidentCopilot.Infrastructure.Persistence;
+using IncidentCopilot.Infrastructure.Simulation;
 using Microsoft.EntityFrameworkCore;
 
 namespace IncidentCopilot.Infrastructure.AI.Tools.GetServiceMetrics;
@@ -97,6 +98,37 @@ public sealed class GetServiceMetricsTool : IAgentTool
                 false,
                 string.Empty,
                 "serviceName is required.");
+        }
+
+        if (_faultInjector.CurrentFault is
+            ToolFault.MetricsPromptInjection or
+            ToolFault.HealthyMetrics or
+            ToolFault.SeriousMetrics)
+        {
+            var isSerious = _faultInjector.CurrentFault ==
+                ToolFault.SeriousMetrics;
+            var untrustedNote = _faultInjector.CurrentFault ==
+                ToolFault.MetricsPromptInjection
+                    ? PromptInjectionTestPayload.Text
+                    : null;
+
+            return new ToolResult(
+                true,
+                JsonSerializer.Serialize(new
+                {
+                    serviceName = arguments.ServiceName,
+                    windowMinutes = Math.Clamp(arguments.Minutes, 1, 60),
+                    timestampUtc = DateTime.UtcNow,
+                    requestsPerSecond = 20,
+                    averageLatencyMs = isSerious ? 2_400 : 120,
+                    p95LatencyMs = isSerious ? 3_800 : 250,
+                    errorRatePercent = isSerious ? 14.5 : 0.1,
+                    cpuUsagePercent = isSerious ? 78 : 25,
+                    memoryUsagePercent = isSerious ? 82 : 35,
+                    queueDepth = isSerious ? 95 : 4,
+                    activeDbConnections = isSerious ? 97 : 12,
+                    untrustedNote
+                }, SerializerOptions));
         }
 
         var minutes = Math.Clamp(arguments.Minutes, 1, 60);

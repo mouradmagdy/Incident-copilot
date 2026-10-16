@@ -6,5 +6,10 @@ public enum ToolFault
     MetricsTimeout,
     LogsTimeout,
     MetricsFailure,
-    LogsFailure
+    LogsFailure,
+    RagPromptInjection,
+    LogsPromptInjection,
+    MetricsPromptInjection,
+    HealthyMetrics,
+    SeriousMetrics
 }

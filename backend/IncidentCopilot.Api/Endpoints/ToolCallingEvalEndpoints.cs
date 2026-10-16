@@ -46,7 +46,12 @@ public static class ToolCallingEvalEndpoints
 
             return Results.Ok(new ToolCallingEvalResponse(
                 result.Content,
-                result.ToolCalls));
+                result.ToolCalls,
+                result.PendingAction is null
+                    ? null
+                    : new PendingActionEvalResponse(
+                        result.PendingAction.ToolName,
+                        result.PendingAction.Status)));
         }
         catch (GroqApiException exception)
             when (exception.StatusCode == HttpStatusCode.TooManyRequests)

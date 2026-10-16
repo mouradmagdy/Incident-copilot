@@ -32,6 +32,26 @@ public sealed class ToolExecutor
 
         try
         {
+            if (tool.ExecutionMode == ToolExecutionMode.RequiresApproval &&
+                context.PendingActionId is null)
+            {
+                outcome = "approval_required";
+                return new ToolResult(
+                    false,
+                    string.Empty,
+                    $"Tool '{tool.Name}' requires an approved pending action.");
+            }
+
+            if (tool.ExecutionMode == ToolExecutionMode.ReadOnly &&
+                context.PendingActionId is not null)
+            {
+                outcome = "invalid_execution_mode";
+                return new ToolResult(
+                    false,
+                    string.Empty,
+                    $"Read-only tool '{tool.Name}' cannot execute as a write action.");
+            }
+
             var result = await tool.ExecuteAsync(
                 context,
                 timeoutCts.Token);
@@ -72,6 +92,19 @@ public sealed class ToolExecutor
             IncidentCopilotTelemetry.ToolDuration.Record(
                 stopwatch.Elapsed.TotalSeconds,
                 tags);
+
+            if (tool.ExecutionMode == ToolExecutionMode.RequiresApproval &&
+                outcome != "success")
+            {
+                IncidentCopilotTelemetry.WriteToolFailures.Add(
+                    1,
+                    new KeyValuePair<string, object?>(
+                        "tool.name",
+                        tool.Name),
+                    new KeyValuePair<string, object?>(
+                        "tool.outcome",
+                        outcome));
+            }
         }
     }
 }

@@ -113,6 +113,7 @@ builder.Services.AddScoped<IAgentTool, GetServiceMetricsTool>();
 builder.Services.AddScoped<IAgentTool, GetRecentLogsTool>();
 builder.Services.AddScoped<IAgentTool, CreateIncidentTool>();
 builder.Services.AddScoped<ToolExecutor>();
+builder.Services.AddSingleton<PendingActionExecutionGate>();
 builder.Services.AddSingleton<
     IToolApprovalPolicy,
     CreateIncidentApprovalPolicy>();
@@ -122,15 +123,6 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<
     IPendingActionService,
     PendingActionService>();
-
-builder.Services
-    .AddOptions<ChatDiagnosticsOptions>()
-    .Bind(builder.Configuration.GetSection(
-        ChatDiagnosticsOptions.SectionName))
-    .Validate(
-        options => options.ChunkContentLimit > 0,
-        "ChatDiagnostics:ChunkContentLimit must be greater than zero.")
-    .ValidateOnStart();
 
 builder.Services
     .AddOptions<KnowledgeOptions>()
@@ -185,10 +177,6 @@ builder.Services.AddScoped<
     IKnowledgeDocumentRepository,
     KnowledgeDocumentRepository>();
 builder.Services.AddScoped<KnowledgeRetriever>();
-builder.Services.AddScoped<IKnowledgeRetriever>(serviceProvider =>
-    new InstrumentedKnowledgeRetriever(
-        serviceProvider.GetRequiredService<KnowledgeRetriever>()));
-
 
 if (builder.Environment.IsDevelopment())
 {
@@ -222,6 +210,22 @@ else
 {
     builder.Services.AddSingleton<IToolFaultInjector, NoToolFaultInjector>();
 }
+
+builder.Services.AddScoped<IKnowledgeRetriever>(serviceProvider =>
+{
+    IKnowledgeRetriever retriever = new InstrumentedKnowledgeRetriever(
+        serviceProvider.GetRequiredService<KnowledgeRetriever>());
+
+    if (builder.Environment.IsDevelopment())
+    {
+        retriever = new DevelopmentSecurityKnowledgeRetriever(
+            retriever,
+            serviceProvider.GetRequiredService<IToolFaultInjector>(),
+            serviceProvider.GetRequiredService<IHostEnvironment>());
+    }
+
+    return retriever;
+});
 builder.Services.AddControllers();
 
 var app = builder.Build();

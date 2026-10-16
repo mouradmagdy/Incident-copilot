@@ -25,6 +25,7 @@ const statusStyles: Record<PendingAction['status'], string> = {
   Pending: 'bg-warning-soft text-warning',
   Completed: 'bg-success-soft text-success',
   Cancelled: 'bg-surface-muted text-muted',
+  Expired: 'bg-surface-muted text-muted',
   Failed: 'bg-danger-soft text-danger',
 }
 
@@ -32,6 +33,7 @@ const cardStyles: Record<PendingAction['status'], string> = {
   Pending: 'border-warning/35 bg-warning-soft/30',
   Completed: 'border-success/35 bg-success-soft/25',
   Cancelled: 'border-border bg-surface-muted/55',
+  Expired: 'border-border bg-surface-muted/55',
   Failed: 'border-danger/35 bg-danger-soft/25',
 }
 
@@ -39,6 +41,7 @@ const headerLabels: Record<PendingAction['status'], string> = {
   Pending: 'Approval required',
   Completed: 'Incident created',
   Cancelled: 'Action cancelled',
+  Expired: 'Approval expired',
   Failed: 'Action failed',
 }
 
@@ -115,6 +118,13 @@ export function PendingActionCard({
           <p className="mt-2 mb-0 flex items-center gap-1.5 text-[9px] font-medium text-muted">
             <XCircle size={12} />
             Action cancelled. Nothing was executed.
+          </p>
+        )}
+
+        {action.status === 'Expired' && (
+          <p className="mt-2 mb-0 flex items-center gap-1.5 text-[9px] font-medium text-muted">
+            <XCircle size={12} />
+            This proposal expired without executing the action.
           </p>
         )}
 

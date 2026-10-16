@@ -376,13 +376,12 @@ public sealed class GroqLlmClient : ILlmClient
             _logger.LogWarning(
                 "Groq rate limit reached. Retry {RetryNumber}/{MaxRetries} " +
                 "after {RetryDelayMs} ms. RequestId: {RequestId}; " +
-                "RateLimitHeaders: {@RateLimitHeaders}; Response: {ResponseBody}",
+                "RateLimitHeaders: {@RateLimitHeaders}",
                 retry + 1,
                 MaxRateLimitRetries,
                 delay.TotalMilliseconds,
                 exception.RequestId,
-                exception.ResponseHeaders,
-                exception.ResponseBody);
+                exception.ResponseHeaders);
 
             response.Dispose();
             await Task.Delay(delay, cancellationToken);
@@ -407,12 +406,11 @@ public sealed class GroqLlmClient : ILlmClient
         _logger.LogWarning(
             "Groq request failed after retries. StatusCode: {StatusCode}; " +
             "RetryAfter: {RetryAfter}; RequestId: {RequestId}; " +
-            "RateLimitHeaders: {@RateLimitHeaders}; Response: {ResponseBody}",
+            "RateLimitHeaders: {@RateLimitHeaders}",
             (int?)exception.StatusCode,
             exception.RetryAfter,
             exception.RequestId,
-            exception.ResponseHeaders,
-            exception.ResponseBody);
+            exception.ResponseHeaders);
     }
 
     private static TimeSpan GetRetryDelay(HttpResponseMessage response)

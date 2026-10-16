@@ -33,7 +33,9 @@ namespace IncidentCopilot.Infrastructure.AI.Tools.CreateIncident
             "Proposes creating a production incident and displays Confirm and " +
             "Cancel controls to the user; it does not create the incident until " +
             "the user confirms. Request this after current runtime evidence " +
-            "shows a serious production issue. Do not ask for confirmation in " +
+            "shows a serious production issue. For broad investigations, " +
+            "inspect both current metrics and recent logs before requesting " +
+            "this tool. Do not ask for confirmation in " +
             "ordinary assistant text; call this tool to request confirmation.",
             new
             {
@@ -102,18 +104,6 @@ namespace IncidentCopilot.Infrastructure.AI.Tools.CreateIncident
                     "Creating an incident requires an approved pending action.");
             }
 
-            var existingIncident = await _dbContext.Incidents
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    incident =>
-                        incident.PendingActionId == pendingActionId,
-                    cancellationToken);
-
-            if (existingIncident is not null)
-            {
-                return CreateSuccessResult(existingIncident);
-            }
-
             CreateIncidentArguments? arguments;
 
             try
@@ -151,6 +141,18 @@ namespace IncidentCopilot.Infrastructure.AI.Tools.CreateIncident
                     false,
                     string.Empty,
                     $"Unknown severity '{arguments.Severity}'.");
+            }
+
+            var existingIncident = await _dbContext.Incidents
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    incident =>
+                        incident.PendingActionId == pendingActionId,
+                    cancellationToken);
+
+            if (existingIncident is not null)
+            {
+                return CreateSuccessResult(existingIncident);
             }
 
             var incident = new Incident

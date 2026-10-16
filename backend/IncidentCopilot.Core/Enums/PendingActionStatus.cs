@@ -11,6 +11,7 @@ namespace IncidentCopilot.Core.Enums
         Pending,
         Completed,
         Cancelled,
+        Expired,
         Failed,
     }
 }

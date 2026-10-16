@@ -37,5 +37,20 @@ public sealed class IncidentCopilotTelemetryTests
         Assert.Equal(
             "incidentcopilot.tool.duration",
             IncidentCopilotTelemetry.ToolDuration.Name);
+        Assert.Equal(
+            "incidentcopilot.pending_actions.created",
+            IncidentCopilotTelemetry.PendingActionsCreated.Name);
+        Assert.Equal(
+            "incidentcopilot.pending_actions.confirmed",
+            IncidentCopilotTelemetry.PendingActionsConfirmed.Name);
+        Assert.Equal(
+            "incidentcopilot.pending_actions.cancelled",
+            IncidentCopilotTelemetry.PendingActionsCancelled.Name);
+        Assert.Equal(
+            "incidentcopilot.pending_actions.expired",
+            IncidentCopilotTelemetry.PendingActionsExpired.Name);
+        Assert.Equal(
+            "incidentcopilot.write_tools.failures",
+            IncidentCopilotTelemetry.WriteToolFailures.Name);
     }
 }

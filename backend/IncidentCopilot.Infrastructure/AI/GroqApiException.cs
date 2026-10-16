@@ -9,7 +9,7 @@ public sealed class GroqApiException : HttpRequestException
         string responseBody,
         IReadOnlyDictionary<string, string> responseHeaders)
         : base(
-            CreateMessage(statusCode, responseBody, responseHeaders),
+            CreateMessage(statusCode, responseHeaders),
             inner: null,
             statusCode)
     {
@@ -34,7 +34,6 @@ public sealed class GroqApiException : HttpRequestException
 
     private static string CreateMessage(
         HttpStatusCode statusCode,
-        string responseBody,
         IReadOnlyDictionary<string, string> responseHeaders)
     {
         var headerSummary = responseHeaders.Count == 0
@@ -43,12 +42,8 @@ public sealed class GroqApiException : HttpRequestException
                 ", ",
                 responseHeaders.Select(pair => $"{pair.Key}={pair.Value}"));
 
-        var body = string.IsNullOrWhiteSpace(responseBody)
-            ? "<empty>"
-            : responseBody;
-
         return $"Groq API request failed with status " +
             $"{(int)statusCode} ({statusCode}). " +
-            $"Headers: {headerSummary}. Response: {body}";
+            $"Headers: {headerSummary}. Response body omitted from logs.";
     }
 }

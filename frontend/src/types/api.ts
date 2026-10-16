@@ -53,6 +53,7 @@ export type PendingActionStatus =
   | 'Pending'
   | 'Completed'
   | 'Cancelled'
+  | 'Expired'
   | 'Failed'
 
 export interface PendingAction {

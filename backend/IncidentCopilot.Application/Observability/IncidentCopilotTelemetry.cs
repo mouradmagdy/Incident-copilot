@@ -55,4 +55,34 @@ public static class IncidentCopilotTelemetry
             "incidentcopilot.tool.duration",
             unit: "s",
             description: "Duration of agent tool calls.");
+
+    public static readonly Counter<long> PendingActionsCreated =
+        Meter.CreateCounter<long>(
+            "incidentcopilot.pending_actions.created",
+            unit: "{action}",
+            description: "Number of pending actions created.");
+
+    public static readonly Counter<long> PendingActionsConfirmed =
+        Meter.CreateCounter<long>(
+            "incidentcopilot.pending_actions.confirmed",
+            unit: "{action}",
+            description: "Number of pending actions confirmed.");
+
+    public static readonly Counter<long> PendingActionsCancelled =
+        Meter.CreateCounter<long>(
+            "incidentcopilot.pending_actions.cancelled",
+            unit: "{action}",
+            description: "Number of pending actions cancelled.");
+
+    public static readonly Counter<long> PendingActionsExpired =
+        Meter.CreateCounter<long>(
+            "incidentcopilot.pending_actions.expired",
+            unit: "{action}",
+            description: "Number of pending actions expired before confirmation.");
+
+    public static readonly Counter<long> WriteToolFailures =
+        Meter.CreateCounter<long>(
+            "incidentcopilot.write_tools.failures",
+            unit: "{failure}",
+            description: "Number of failed state-changing tool executions.");
 }

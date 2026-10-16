@@ -4,4 +4,9 @@ namespace IncidentCopilot.Api.Contracts.Evals;
 
 public sealed record ToolCallingEvalResponse(
     string Answer,
-    IReadOnlyList<ToolCallTrace> ToolCalls);
+    IReadOnlyList<ToolCallTrace> ToolCalls,
+    PendingActionEvalResponse? PendingAction);
+
+public sealed record PendingActionEvalResponse(
+    string ToolName,
+    string Status);

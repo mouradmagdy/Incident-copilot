@@ -207,6 +207,9 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("AssistantResponse")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -230,10 +233,27 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("SystemPrompt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ToolCallId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ToolExchangesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.Property<string>("ToolName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("UserMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

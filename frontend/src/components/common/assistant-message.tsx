@@ -30,7 +30,6 @@ export function AssistantMessage({
       {isAssistant ? (
         <div className="min-w-0 max-w-[calc(100%-31px)]">
           {message.content && <MarkdownMessage content={message.content} />}
-          <MessageSources sources={message.sources} />
           {message.pendingAction && (
             <PendingActionCard
               action={message.pendingAction}
@@ -39,6 +38,7 @@ export function AssistantMessage({
               onDecision={onPendingActionDecision}
             />
           )}
+          <MessageSources sources={message.sources} />
         </div>
       ) : (
         <p className="m-0 whitespace-pre-wrap rounded-lg bg-primary-soft px-[11px] py-[9px] text-[10px] leading-[1.45] text-primary-text">

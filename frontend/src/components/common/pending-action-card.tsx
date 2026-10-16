@@ -12,6 +12,7 @@ import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { CardContent } from '../ui/card-content'
 import { CardHeader } from '../ui/card-header'
+import { parseCreatedIncidentResult } from '../../utils/pending-action'
 
 interface PendingActionCardProps {
   action: PendingAction
@@ -27,6 +28,20 @@ const statusStyles: Record<PendingAction['status'], string> = {
   Failed: 'bg-danger-soft text-danger',
 }
 
+const cardStyles: Record<PendingAction['status'], string> = {
+  Pending: 'border-warning/35 bg-warning-soft/30',
+  Completed: 'border-success/35 bg-success-soft/25',
+  Cancelled: 'border-border bg-surface-muted/55',
+  Failed: 'border-danger/35 bg-danger-soft/25',
+}
+
+const headerLabels: Record<PendingAction['status'], string> = {
+  Pending: 'Approval required',
+  Completed: 'Incident created',
+  Cancelled: 'Action cancelled',
+  Failed: 'Action failed',
+}
+
 export function PendingActionCard({
   action,
   isUpdating,
@@ -34,15 +49,24 @@ export function PendingActionCard({
   onDecision,
 }: PendingActionCardProps) {
   const isPending = action.status === 'Pending'
+  const incident = parseCreatedIncidentResult(action)
 
   return (
-    <Card className="mt-2 overflow-hidden border-warning/35 bg-warning-soft/30">
-      <CardHeader className="gap-2 border-b border-warning/20">
+    <Card className={`mt-2 overflow-hidden ${cardStyles[action.status]}`}>
+      <CardHeader className="items-start gap-2 border-b border-border/65">
         <span className="flex min-w-0 items-center gap-2 font-semibold">
-          <span className="grid size-6 shrink-0 place-items-center rounded-md bg-warning-soft text-warning">
-            <ShieldAlert size={14} />
+          <span
+            className={`grid size-6 shrink-0 place-items-center rounded-md ${statusStyles[action.status]}`}
+          >
+            {action.status === 'Completed' ? (
+              <CheckCircle2 size={14} />
+            ) : action.status === 'Pending' ? (
+              <ShieldAlert size={14} />
+            ) : (
+              <XCircle size={14} />
+            )}
           </span>
-          Approval required
+          {headerLabels[action.status]}
         </span>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-semibold ${statusStyles[action.status]}`}
@@ -55,15 +79,36 @@ export function PendingActionCard({
         <p className="m-0 text-[10px] font-medium leading-relaxed text-text-strong">
           {action.description}
         </p>
-        <p className="mt-1.5 mb-0 text-[9px] leading-relaxed text-muted">
-          This changes system state and will not run without confirmation.
-        </p>
+        {isPending && (
+          <p className="mt-1.5 mb-0 text-[9px] leading-relaxed text-muted">
+            This changes system state and will not run without confirmation.
+          </p>
+        )}
 
         {action.status === 'Completed' && (
-          <p className="mt-2 mb-0 flex items-center gap-1.5 text-[9px] font-medium text-success">
-            <CheckCircle2 size={12} />
-            Action completed successfully.
-          </p>
+          <div className="mt-2 rounded-md border border-success/20 bg-surface/65 p-2.5">
+            {incident ? (
+              <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-[9px]">
+                <dt className="text-muted">Incident</dt>
+                <dd className="m-0 truncate font-semibold text-text-strong">
+                  #{incident.id} — {incident.title}
+                </dd>
+                <dt className="text-muted">Severity</dt>
+                <dd className="m-0 font-medium text-text-strong">
+                  {incident.severity}
+                </dd>
+                <dt className="text-muted">Status</dt>
+                <dd className="m-0 font-medium text-success">
+                  {incident.status}
+                </dd>
+              </dl>
+            ) : (
+              <p className="m-0 flex items-center gap-1.5 text-[9px] font-medium text-success">
+                <CheckCircle2 size={12} />
+                Action completed successfully.
+              </p>
+            )}
+          </div>
         )}
 
         {action.status === 'Cancelled' && (

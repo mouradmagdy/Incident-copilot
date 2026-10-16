@@ -336,6 +336,80 @@ public sealed class GroqLlmClientTests
     }
 
     [Fact]
+    public async Task GenerateAgentRoundStreamAsync_WithoutTools_RequestsFinalContentOnly()
+    {
+        using var handler = new StubHttpMessageHandler(
+            async (request, cancellationToken) =>
+            {
+                var json = await request.Content!
+                    .ReadAsStringAsync(cancellationToken);
+                using var document = JsonDocument.Parse(json);
+                var root = document.RootElement;
+
+                Assert.False(root.TryGetProperty("tools", out _));
+                Assert.False(root.TryGetProperty("tool_choice", out _));
+                Assert.False(root.TryGetProperty(
+                    "parallel_tool_calls",
+                    out _));
+
+                var messages = root.GetProperty("messages");
+                Assert.Equal(4, messages.GetArrayLength());
+                Assert.Equal(
+                    "assistant",
+                    messages[2].GetProperty("role").GetString());
+                Assert.Equal(
+                    "call_incident",
+                    messages[2]
+                        .GetProperty("tool_calls")[0]
+                        .GetProperty("id")
+                        .GetString());
+                Assert.Equal(
+                    "tool",
+                    messages[3].GetProperty("role").GetString());
+                Assert.Equal(
+                    "call_incident",
+                    messages[3].GetProperty("tool_call_id").GetString());
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        data: {"choices":[{"delta":{"content":"Incident #3 was created successfully."}}]}
+
+                        data: [DONE]
+
+                        """,
+                        Encoding.UTF8,
+                        "text/event-stream")
+                };
+            });
+
+        using var httpClient = new HttpClient(handler);
+        var client = CreateClient(httpClient);
+        var events = await ReadAllAsync(
+            client.GenerateAgentRoundStreamAsync(
+                new LlmAgentRoundRequest(
+                    "Return the confirmed result.",
+                    "Create an incident if needed.",
+                    [],
+                    [
+                        new LlmToolExchange(
+                            new LlmToolCall(
+                                "call_incident",
+                                "create_incident",
+                                "{\"serviceName\":\"OrderService\"}"),
+                            "{\"id\":3,\"status\":\"Open\"}")
+                    ]),
+                CancellationToken.None));
+
+        var streamEvent = Assert.Single(events);
+        Assert.Equal(
+            "Incident #3 was created successfully.",
+            streamEvent.Content);
+        Assert.Null(streamEvent.ToolCall);
+    }
+
+    [Fact]
     public async Task GenerateAfterToolStreamAsync_ReturnsContentDeltas()
     {
         using var handler = new StubHttpMessageHandler(

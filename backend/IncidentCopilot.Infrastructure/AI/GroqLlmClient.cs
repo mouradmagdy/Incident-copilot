@@ -160,9 +160,9 @@ public sealed class GroqLlmClient : ILlmClient
             _options.Model,
             CreateAgentMessages(request),
             true,
-            tools,
-            "auto",
-            false);
+            tools.Length == 0 ? null : tools,
+            tools.Length == 0 ? null : "auto",
+            tools.Length == 0 ? null : false);
 
         string? toolCallId = null;
         string? toolName = null;

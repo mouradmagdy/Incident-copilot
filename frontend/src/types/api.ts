@@ -64,4 +64,5 @@ export interface PendingAction {
   decidedAtUtc: string | null
   resultJson: string | null
   error: string | null
+  assistantResponse: string | null
 }

@@ -340,12 +340,25 @@ public sealed class ChatService : IChatService
                         }
                     }
 
+                    var proposalMessage =
+                        await GenerateApprovalExplanationAsync(
+                            systemPrompt,
+                            message,
+                            requestedToolCall,
+                            toolExchanges,
+                            cancellationToken);
+
                     var pendingAction = await _pendingActionService
                         .CreateAsync(
-                            requestedTool.Name,
-                            requestedToolCall.ArgumentsJson,
-                            requestedTool.GetApprovalDescription(
-                                requestedToolCall.ArgumentsJson),
+                            new PendingActionRequest(
+                                requestedTool.Name,
+                                requestedToolCall.Id,
+                                requestedToolCall.ArgumentsJson,
+                                requestedTool.GetApprovalDescription(
+                                    requestedToolCall.ArgumentsJson),
+                                systemPrompt,
+                                message,
+                                toolExchanges.ToArray()),
                             cancellationToken);
 
                     _logger.LogInformation(
@@ -354,6 +367,13 @@ public sealed class ChatService : IChatService
                         pendingAction.Id);
 
                     outcome = "pending_approval";
+
+                    if (!string.IsNullOrWhiteSpace(proposalMessage))
+                    {
+                        yield return new ChatDeltaEvent(
+                            proposalMessage);
+                    }
+
                     yield return new ChatPendingActionEvent(
                         pendingAction);
                     yield break;
@@ -451,6 +471,60 @@ public sealed class ChatService : IChatService
         catch (JsonException)
         {
             return json;
+        }
+    }
+
+    private async Task<string?> GenerateApprovalExplanationAsync(
+        string systemPrompt,
+        string userMessage,
+        LlmToolCall requestedToolCall,
+        IReadOnlyList<LlmToolExchange> toolExchanges,
+        CancellationToken cancellationToken)
+    {
+        var evidence = toolExchanges.Select(exchange => new
+        {
+            tool = exchange.ToolCall.Name,
+            result = exchange.ToolResult
+        });
+
+        try
+        {
+            var response = await _llmClient.GenerateAsync(
+                new LlmRequest(
+                    $"""
+                    {systemPrompt}
+
+                    Write a concise pre-approval explanation for the user.
+                    Explain why the verified runtime evidence warrants the
+                    proposed action. Use only the supplied tool evidence and
+                    do not invent values. Do not claim the action has happened.
+                    End by saying that the action is being proposed for the
+                    user's approval. Do not mention internal policies or
+                    implementation details.
+                    """,
+                    $"""
+                    Original user request:
+                    {userMessage}
+
+                    Runtime tool evidence:
+                    {JsonSerializer.Serialize(evidence)}
+
+                    Proposed tool: {requestedToolCall.Name}
+                    Proposed arguments:
+                    {requestedToolCall.ArgumentsJson}
+                    """),
+                cancellationToken);
+
+            return response.Content;
+        }
+        catch (Exception exception)
+            when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(
+                exception,
+                "Could not generate the approval explanation for tool {ToolName}.",
+                requestedToolCall.Name);
+            return null;
         }
     }
 

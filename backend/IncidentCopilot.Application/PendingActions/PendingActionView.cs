@@ -8,4 +8,5 @@ public sealed record PendingActionView(
     DateTime CreatedAtUtc,
     DateTime? DecidedAtUtc,
     string? ResultJson,
-    string? Error);
+    string? Error,
+    string? AssistantResponse);

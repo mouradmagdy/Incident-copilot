@@ -84,13 +84,33 @@ export function useChat() {
       decision: PendingActionDecision
     }) => pendingActionsApi.decide(id, decision),
     onSuccess: (action) => {
-      setMessages((current) =>
-        current.map((message) =>
+      setMessages((current) => {
+        const previousAction = current.find(
+          (message) => message.pendingAction?.id === action.id,
+        )?.pendingAction
+        const updatedMessages = current.map((message) =>
           message.pendingAction?.id === action.id
             ? { ...message, pendingAction: action }
             : message,
-        ),
-      )
+        )
+        const assistantResponse = action.assistantResponse
+
+        if (
+          !assistantResponse ||
+          previousAction?.status === action.status
+        ) {
+          return updatedMessages
+        }
+
+        return [
+          ...updatedMessages,
+          {
+            id: nextMessageId++,
+            role: 'assistant',
+            content: assistantResponse,
+          },
+        ]
+      })
     },
   })
 

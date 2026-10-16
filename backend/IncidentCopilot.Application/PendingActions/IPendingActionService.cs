@@ -3,9 +3,7 @@ namespace IncidentCopilot.Application.PendingActions;
 public interface IPendingActionService
 {
     Task<PendingActionView> CreateAsync(
-        string toolName,
-        string argumentsJson,
-        string description,
+        PendingActionRequest request,
         CancellationToken cancellationToken = default);
 
     Task<PendingActionView?> ConfirmAsync(

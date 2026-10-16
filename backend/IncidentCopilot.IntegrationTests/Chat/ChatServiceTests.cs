@@ -253,8 +253,25 @@ public sealed class ChatServiceTests
         Assert.NotNull(result.PendingAction);
         Assert.Equal("create_incident", result.PendingAction.ToolName);
         Assert.Equal(
+            llmClient.ApprovalExplanation,
+            result.Content);
+        var explanationRequest = Assert.Single(
+            llmClient.GenerateRequests);
+        Assert.Contains(
+            "errorRatePercent",
+            explanationRequest.UserMessage);
+        Assert.Contains(
+            "do not invent values",
+            explanationRequest.SystemPrompt);
+        var pendingActionRequest = Assert.Single(
+            pendingActions.CreatedActions);
+        Assert.Equal(
             createIncidentCall.ArgumentsJson,
-            Assert.Single(pendingActions.CreatedActions).ArgumentsJson);
+            pendingActionRequest.ArgumentsJson);
+        Assert.Equal(
+            createIncidentCall.Id,
+            pendingActionRequest.ToolCallId);
+        Assert.Single(pendingActionRequest.ToolExchanges);
     }
 
     [Fact]
@@ -293,6 +310,7 @@ public sealed class ChatServiceTests
         Assert.Equal(0, createIncidentTool.ExecutionCount);
         Assert.Null(result.PendingAction);
         Assert.Empty(pendingActions.CreatedActions);
+        Assert.Empty(llmClient.GenerateRequests);
     }
 
     [Fact]
@@ -336,6 +354,7 @@ public sealed class ChatServiceTests
             result.Content);
         Assert.Null(result.PendingAction);
         Assert.Empty(pendingActions.CreatedActions);
+        Assert.Empty(llmClient.GenerateRequests);
         Assert.Equal(0, createIncidentTool.ExecutionCount);
         Assert.Equal(3, llmClient.AgentRoundRequests.Count);
         var rejection = Assert.Single(
@@ -442,28 +461,24 @@ public sealed class ChatServiceTests
     private sealed class FakePendingActionService
         : IPendingActionService
     {
-        public List<CreatedPendingAction> CreatedActions { get; } = [];
+        public List<PendingActionRequest> CreatedActions { get; } = [];
 
         public Task<PendingActionView> CreateAsync(
-            string toolName,
-            string argumentsJson,
-            string description,
+            PendingActionRequest request,
             CancellationToken cancellationToken = default)
         {
             var action = new PendingActionView(
                 Guid.NewGuid(),
-                toolName,
-                description,
+                request.ToolName,
+                request.Description,
                 "Pending",
                 DateTime.UtcNow,
                 null,
                 null,
+                null,
                 null);
 
-            CreatedActions.Add(new CreatedPendingAction(
-                toolName,
-                argumentsJson,
-                description));
+            CreatedActions.Add(request);
 
             return Task.FromResult(action);
         }
@@ -481,11 +496,6 @@ public sealed class ChatServiceTests
         {
             throw new NotSupportedException();
         }
-
-        public sealed record CreatedPendingAction(
-            string ToolName,
-            string ArgumentsJson,
-            string Description);
     }
 
     private sealed class FakeLlmClient : ILlmClient
@@ -499,11 +509,18 @@ public sealed class ChatServiceTests
 
         public List<LlmAgentRoundRequest> AgentRoundRequests { get; } = [];
 
+        public List<LlmRequest> GenerateRequests { get; } = [];
+
+        public string ApprovalExplanation { get; set; } =
+            "The runtime evidence shows serious degradation, so I am proposing an incident for your approval.";
+
         public Task<LlmResponse> GenerateAsync(
             LlmRequest request,
             CancellationToken cancellationToken)
         {
-            throw new NotSupportedException();
+            GenerateRequests.Add(request);
+            return Task.FromResult(new LlmResponse(
+                ApprovalExplanation));
         }
 
         public Task<LlmTurnResponse> GenerateWithToolsAsync(

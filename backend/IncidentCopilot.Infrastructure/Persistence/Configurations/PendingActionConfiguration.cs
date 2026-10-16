@@ -23,6 +23,22 @@ public sealed class PendingActionConfiguration
             .HasMaxLength(500)
             .IsRequired();
 
+        builder.Property(action => action.ToolCallId)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(action => action.SystemPrompt)
+            .HasColumnType("text")
+            .IsRequired();
+
+        builder.Property(action => action.UserMessage)
+            .HasColumnType("text")
+            .IsRequired();
+
+        builder.Property(action => action.ToolExchangesJson)
+            .HasColumnType("jsonb")
+            .IsRequired();
+
         builder.Property(action => action.Status)
             .HasConversion<string>()
             .HasMaxLength(30)
@@ -39,6 +55,9 @@ public sealed class PendingActionConfiguration
 
         builder.Property(action => action.Error)
             .HasMaxLength(2_000);
+
+        builder.Property(action => action.AssistantResponse)
+            .HasColumnType("text");
 
         builder.HasIndex(action => new
         {

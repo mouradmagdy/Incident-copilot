@@ -10,7 +10,8 @@ public sealed record PendingActionResponse(
     DateTime CreatedAtUtc,
     DateTime? DecidedAtUtc,
     string? ResultJson,
-    string? Error)
+    string? Error,
+    string? AssistantResponse)
 {
     public static PendingActionResponse From(PendingActionView action)
     {
@@ -22,6 +23,7 @@ public sealed record PendingActionResponse(
             action.CreatedAtUtc,
             action.DecidedAtUtc,
             action.ResultJson,
-            action.Error);
+            action.Error,
+            action.AssistantResponse);
     }
 }

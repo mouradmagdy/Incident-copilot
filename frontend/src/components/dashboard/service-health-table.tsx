@@ -4,8 +4,8 @@ import {
   useReactTable,
   type ColumnDef,
 } from '@tanstack/react-table'
-import { MoreHorizontal } from 'lucide-react'
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import type { ServiceHealthRow } from '../../types/dashboard'
 import { formatNumber } from '../../utils/formatters'
 import { Badge } from '../ui/badge'
@@ -56,10 +56,6 @@ export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
         ? formatNumber(row.original.metric.activeDbConnections)
         : '—',
     },
-    {
-      id: 'actions',
-      cell: () => <MoreHorizontal size={15} className="text-muted" />,
-    },
   ], [])
 
   const table = useReactTable({
@@ -72,7 +68,7 @@ export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
     <Card className="flex h-full min-w-0 flex-col overflow-hidden">
       <CardHeader>
         <strong>Service Health</strong>
-        <Button variant="outline" size="sm" type="button">View all services</Button>
+        <Button asChild variant="outline" size="sm"><Link to="/services">View all services</Link></Button>
       </CardHeader>
       <div className="flex min-h-0 flex-1 px-2.5 pb-2">
         <table className="service-health-table h-full w-full table-fixed border-collapse text-left text-[9px] whitespace-nowrap [&_td]:overflow-hidden [&_td]:border-t [&_td]:border-border-subtle [&_td]:px-1.5 [&_td]:py-1.5 [&_td]:text-ellipsis [&_td]:text-text [&_th]:overflow-hidden [&_th]:px-1.5 [&_th]:py-1 [&_th]:text-ellipsis [&_th]:font-medium [&_th]:text-muted">

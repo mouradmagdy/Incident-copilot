@@ -8,9 +8,11 @@ public interface IPendingActionService
 
     Task<PendingActionView?> ConfirmAsync(
         Guid id,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     Task<PendingActionView?> CancelAsync(
         Guid id,
+        Guid userId,
         CancellationToken cancellationToken = default);
 }

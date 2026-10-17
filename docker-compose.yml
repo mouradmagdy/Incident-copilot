@@ -42,6 +42,7 @@ services:
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=incident_copilot;Username=incident_copilot_dev;Password=incident_copilot_dev_password
       EmbeddingService__BaseUrl: http://embedding-service:8000
       Groq__ApiKey: ${GROQ_API_KEY:-}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-incident-copilot-compose-development-key-change-me}
       OpenTelemetry__Otlp__Endpoint: http://otel-collector:4317
     ports:
       - "5087:8080"

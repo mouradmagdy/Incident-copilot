@@ -1,5 +1,6 @@
 using IncidentCopilot.Api.Contracts.PendingActions;
 using IncidentCopilot.Application.PendingActions;
+using IncidentCopilot.Api.Security;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IncidentCopilot.Api.Controllers;
@@ -26,6 +27,7 @@ public sealed class PendingActionsController : ControllerBase
     {
         var action = await _pendingActions.ConfirmAsync(
             id,
+            User.GetRequiredUserId(),
             cancellationToken);
 
         return action is null
@@ -43,6 +45,7 @@ public sealed class PendingActionsController : ControllerBase
     {
         var action = await _pendingActions.CancelAsync(
             id,
+            User.GetRequiredUserId(),
             cancellationToken);
 
         return action is null

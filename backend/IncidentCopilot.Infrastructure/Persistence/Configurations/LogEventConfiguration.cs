@@ -29,6 +29,9 @@ public class LogEventConfiguration : IEntityTypeConfiguration<LogEvent>
         builder.HasIndex(logEvent => new { logEvent.ServiceId, logEvent.TimestampUtc })
             .IsDescending(false, true);
 
+        builder.HasIndex(logEvent => logEvent.TimestampUtc)
+            .IsDescending(true);
+
         builder.HasOne(logEvent => logEvent.Service)
             .WithMany(service => service.Logs)
             .HasForeignKey(logEvent => logEvent.ServiceId)

@@ -36,7 +36,7 @@ export function DashboardHeader({
   return (
     <header className="dashboard-header mb-2 flex min-h-10 flex-wrap items-center gap-x-5 gap-y-2">
       <div className="min-w-[190px] flex-1">
-        <h1 className="mb-0.5 text-lg leading-[1.1] tracking-[-.025em] text-text-strong">System Overview</h1>
+        <h1 className="mb-0.5 text-2xl leading-[1.1] font-semibold tracking-[-.03em] text-text-strong">System Overview</h1>
         <p className="text-[10px] text-muted">Monitor the health and performance of your services in real time.</p>
       </div>
 
@@ -61,11 +61,12 @@ export function DashboardHeader({
           </select>
           <ChevronDown className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-muted" size={12} aria-hidden="true" />
         </label>
-        <Button variant="outline" size="icon" type="button" aria-label="Refresh telemetry" onClick={onRefresh}>
+        <Button className="text-primary" variant="outline" size="icon" type="button" aria-label="Refresh telemetry" onClick={onRefresh}>
           <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
         </Button>
         <Button
           variant="ghost"
+          className="text-primary"
           size="icon"
           type="button"
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
@@ -75,6 +76,7 @@ export function DashboardHeader({
         </Button>
         <Button
           variant={assistantOpen ? 'default' : 'outline'}
+          className={assistantOpen ? undefined : 'text-primary'}
           size="icon"
           type="button"
           aria-label={assistantOpen ? 'Close AI assistant' : 'Open AI assistant'}

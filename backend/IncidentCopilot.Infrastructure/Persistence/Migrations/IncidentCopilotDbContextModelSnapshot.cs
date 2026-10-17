@@ -41,10 +41,13 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("UpdatedAtUtc")
-                        .IsDescending();
+                    b.HasIndex("UserId", "UpdatedAtUtc")
+                        .IsDescending(false, true);
 
                     b.ToTable("Conversations");
                 });
@@ -131,6 +134,9 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PendingActionId")
                         .IsUnique();
+
+                    b.HasIndex("StartedAtUtc")
+                        .IsDescending();
 
                     b.HasIndex("Status", "StartedAtUtc")
                         .IsDescending(false, true);
@@ -229,6 +235,9 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TimestampUtc")
+                        .IsDescending();
+
                     b.HasIndex("ServiceId", "TimestampUtc")
                         .IsDescending(false, true);
 
@@ -318,13 +327,16 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("UserMessage")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Status", "CreatedAtUtc");
+                    b.HasIndex("UserId", "Status", "CreatedAtUtc");
 
                     b.ToTable("PendingActions");
                 });
@@ -375,6 +387,53 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("ServiceMetrics");
                 });
 
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.Conversation", b =>
+                {
+                    b.HasOne("IncidentCopilot.Core.Entities.User", "User")
+                        .WithMany("Conversations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("IncidentCopilot.Core.Entities.ConversationMessage", b =>
                 {
                     b.HasOne("IncidentCopilot.Core.Entities.Conversation", "Conversation")
@@ -423,6 +482,16 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.PendingAction", b =>
+                {
+                    b.HasOne("IncidentCopilot.Core.Entities.User", "User")
+                        .WithMany("PendingActions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("IncidentCopilot.Core.Entities.ServiceMetric", b =>
                 {
                     b.HasOne("IncidentCopilot.Core.Entities.MonitoredService", "Service")
@@ -449,6 +518,13 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.Navigation("Logs");
 
                     b.Navigation("Metrics");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.User", b =>
+                {
+                    b.Navigation("Conversations");
+
+                    b.Navigation("PendingActions");
                 });
 #pragma warning restore 612, 618
         }

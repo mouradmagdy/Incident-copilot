@@ -5,6 +5,8 @@ namespace IncidentCopilot.Core.Entities
     public class PendingAction
     {
         public Guid Id { get; set; }
+        public Guid? UserId { get; set; }
+        public User? User { get; set; }
         public required string ToolName { get; set; }
         public required string ArgumentsJson { get; set; }
         public required string Description { get; set; }

@@ -31,9 +31,9 @@ export function AssistantPanel() {
   }
 
   return (
-    <aside className="grid h-screen min-w-0 grid-rows-[auto_minmax(0,1fr)_auto] bg-sidebar">
+    <aside className="grid h-screen min-w-0 grid-rows-[auto_minmax(0,1fr)_auto] bg-surface text-text">
       <header className="flex min-h-16 items-center gap-2.5 border-b border-border px-3.5 py-3">
-        <span className="grid size-7 shrink-0 place-items-center self-center rounded-[6px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-white">
+        <span className="grid size-7 shrink-0 place-items-center self-center rounded-[6px] bg-primary text-white">
           <Bot size={17} />
         </span>
         <div className="min-w-0 flex-1">
@@ -50,7 +50,7 @@ export function AssistantPanel() {
           variant="ghost"
           size="icon"
           type="button"
-          className="size-7 shrink-0"
+          className="size-7 shrink-0 text-primary"
           aria-label="Start a new chat"
           title="New chat"
           disabled={isPending || isLoadingConversation}
@@ -62,7 +62,7 @@ export function AssistantPanel() {
           variant="ghost"
           size="icon"
           type="button"
-          className="shrink-0"
+          className="shrink-0 text-muted hover:text-text-strong"
           aria-label="Close AI assistant"
           onClick={() => setAssistantOpen(false)}
         >
@@ -91,7 +91,7 @@ export function AssistantPanel() {
 
         {isPending && (
           <div className="flex max-w-full items-start gap-2 self-start">
-            <span className="grid size-7 shrink-0 place-items-center rounded-[6px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white">AI</span>
+            <span className="grid size-7 shrink-0 place-items-center rounded-[6px] bg-primary text-[10px] font-bold text-white">AI</span>
             <p className="m-0 rounded-lg bg-surface px-3 py-2.5 text-xs leading-relaxed text-muted">Thinking…</p>
           </div>
         )}

@@ -12,6 +12,11 @@ namespace IncidentCopilot.Application.Chat
             string message,
             CancellationToken cancellationToken = default);
 
+        Task<ChatStreamResponse> AskStreamAsync(
+            string message,
+            Guid? userId,
+            CancellationToken cancellationToken = default);
+
         Task<AgentRunResult> RunAgentAsync(
             string message,
             CancellationToken cancellationToken = default);

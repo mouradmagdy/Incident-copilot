@@ -61,8 +61,14 @@ public sealed class PendingActionConfiguration
 
         builder.HasIndex(action => new
         {
+            action.UserId,
             action.Status,
             action.CreatedAtUtc
         });
+
+        builder.HasOne(action => action.User)
+            .WithMany(user => user.PendingActions)
+            .HasForeignKey(action => action.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

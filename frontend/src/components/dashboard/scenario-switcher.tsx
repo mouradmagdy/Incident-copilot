@@ -17,7 +17,7 @@ export function ScenarioSwitcher({
   onChange: (scenario: SimulationScenario) => void
 }) {
   return (
-    <div className="inline-flex h-8 items-center rounded-[7px] border border-border bg-surface p-[3px]" role="group" aria-label="Development scenario" title="Development scenario">
+    <div className="inline-flex h-8 items-center rounded-[7px] border border-border bg-surface p-[3px]" role="group" aria-label="Operational state" title="Operational state">
       <Database className="mx-1 shrink-0 text-muted" size={13} aria-hidden="true" />
       {scenarios.map((item) => (
         <button

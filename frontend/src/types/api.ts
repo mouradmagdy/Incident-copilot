@@ -1,3 +1,9 @@
+export interface AuthUser {
+  id: string
+  displayName: string
+  email: string
+}
+
 export interface Service {
   id: number
   name: string
@@ -30,6 +36,31 @@ export interface LogEventResponse {
 export interface LogEvent extends LogEventResponse {
   serviceId: number
   serviceName: string
+}
+
+export interface LogEventPage {
+  items: LogEvent[]
+  totalCount: number
+  page: number
+  pageSize: number
+}
+
+export interface LogVolumeBucket {
+  bucketStartUtc: string
+  infoCount: number
+  warningCount: number
+  errorCount: number
+}
+
+export interface Incident {
+  id: number
+  title: string
+  description: string | null
+  severity: 'Low' | 'Medium' | 'High' | 'Critical'
+  status: 'Open' | 'Investigating' | 'Resolved'
+  startedAtUtc: string
+  resolvedAtUtc: string | null
+  rootCause: string | null
 }
 
 export type SimulationScenario = 'Healthy' | 'DatabaseConnectionExhaustion'

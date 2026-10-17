@@ -1,4 +1,6 @@
 using IncidentCopilot.Api.Endpoints;
+using IncidentCopilot.Api.Controllers;
+using IncidentCopilot.Api.Security;
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Conversations;
@@ -12,16 +14,73 @@ using IncidentCopilot.Infrastructure.AI.Tools.GetServiceMetrics;
 using IncidentCopilot.Infrastructure.AI.Tools.CreateIncident;
 using IncidentCopilot.Infrastructure.Persistence;
 using IncidentCopilot.Infrastructure.Simulation;
+using IncidentCopilot.Core.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Pgvector.EntityFrameworkCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerGen();
+
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(
+        options => options.SigningKey.Length >= 32,
+        "Jwt:SigningKey must contain at least 32 characters.")
+    .Validate(
+        options => options.AccessTokenMinutes is > 0 and <= 10_080,
+        "Jwt:AccessTokenMinutes must be between 1 and 10080.")
+    .ValidateOnStart();
+
+var jwtOptions = builder.Configuration
+    .GetSection(JwtOptions.SectionName)
+    .Get<JwtOptions>() ?? new JwtOptions();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies[
+                    AuthController.AccessTokenCookieName];
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 var developmentOtlpEndpoint = builder.Environment.IsDevelopment()
     ? new Uri(
@@ -180,6 +239,19 @@ builder.Services.AddScoped<
     KnowledgeDocumentRepository>();
 builder.Services.AddScoped<KnowledgeRetriever>();
 
+builder.Services
+    .AddOptions<TelemetrySimulationOptions>()
+    .Bind(builder.Configuration.GetSection(
+        TelemetrySimulationOptions.SectionName))
+    .Validate(
+        options => options.Interval > TimeSpan.Zero,
+        "The telemetry simulation interval must be greater than zero.")
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<ITelemetryGenerator, TelemetryGenerator>();
+builder.Services.AddSingleton<ISimulationScenarioState, SimulationScenarioState>();
+builder.Services.AddHostedService<TelemetrySimulationService>();
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSingleton<DevelopmentToolFaultInjector>();
@@ -188,25 +260,6 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddSingleton<IToolFaultState>(serviceProvider =>
         serviceProvider.GetRequiredService<DevelopmentToolFaultInjector>());
 
-    builder.Services
-        .AddOptions<TelemetrySimulationOptions>()
-        .Bind(builder.Configuration.GetSection(
-            TelemetrySimulationOptions.SectionName))
-        .Validate(
-            options => options.Interval > TimeSpan.Zero,
-            "The telemetry simulation interval must be greater than zero.")
-        .ValidateOnStart();
-
-    builder.Services.AddSingleton<
-        ITelemetryGenerator,
-        TelemetryGenerator>();
-
-    builder.Services.AddSingleton<
-        ISimulationScenarioState,
-        SimulationScenarioState>();
-
-    builder.Services.AddHostedService<
-        TelemetrySimulationService>();
 }
 else
 {
@@ -233,19 +286,20 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
+app.MapSimulationEndpoints(app.Environment.IsDevelopment());
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapSimulationEndpoints();
     app.MapToolCallingEvalEndpoints();
 }
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-
     var dbContext = scope.ServiceProvider
         .GetRequiredService<IncidentCopilotDbContext>();
 

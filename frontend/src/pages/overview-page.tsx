@@ -9,12 +9,12 @@ import { useDashboardViewModel } from '../hooks/dashboard/use-dashboard-view-mod
 import { useSimulationScenario } from '../hooks/simulation/use-simulation-scenario'
 
 export function OverviewPage() {
-  const { services, serviceIds, servicesQuery, metricsQuery, logsQuery, refresh } = useDashboardData()
+  const { services, serviceIds, servicesQuery, metricsQuery, logsQuery, incidentsQuery, refresh } = useDashboardData()
   const { scenarioQuery, scenarioMutation } = useSimulationScenario()
   const { serviceRows, summary, telemetrySeries } = useDashboardViewModel(services, metricsQuery.data)
 
-  const hasError = servicesQuery.isError || metricsQuery.isError || logsQuery.isError
-  const isRefreshing = metricsQuery.isFetching || logsQuery.isFetching
+  const hasError = servicesQuery.isError || metricsQuery.isError || logsQuery.isError || incidentsQuery.isError
+  const isRefreshing = metricsQuery.isFetching
 
   return (
     <div className="dashboard-container flex min-h-full min-w-0 flex-col px-4 pt-2.5 pb-4 max-[720px]:px-3">
@@ -41,7 +41,7 @@ export function OverviewPage() {
 
       <section className="dashboard-health mt-2 grid flex-[1_1_155px] grid-cols-[minmax(0,1.8fr)_minmax(220px,.9fr)] gap-2">
         <ServiceHealthTable rows={serviceRows} />
-        <RecentIncidents />
+        <RecentIncidents incidents={incidentsQuery.data ?? []} isLoading={incidentsQuery.isPending} />
       </section>
 
       <RecentLogs logs={logsQuery.data ?? []} isLoading={logsQuery.isPending && serviceIds.length > 0} />

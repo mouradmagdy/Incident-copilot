@@ -12,7 +12,7 @@ export function SidebarTrigger() {
       variant="ghost"
       size="icon"
       type="button"
-      className="size-7 shrink-0"
+      className="size-7 shrink-0 text-sidebar-foreground hover:bg-sidebar-accent"
       aria-label="Collapse sidebar"
       onClick={toggle}
     >

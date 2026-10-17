@@ -9,4 +9,5 @@ public sealed record PendingActionRequest(
     string Description,
     string SystemPrompt,
     string UserMessage,
-    IReadOnlyList<LlmToolExchange> ToolExchanges);
+    IReadOnlyList<LlmToolExchange> ToolExchanges,
+    Guid? UserId = null);

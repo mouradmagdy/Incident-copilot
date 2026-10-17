@@ -65,7 +65,7 @@ export function ChatHistoryMenu({
         variant="ghost"
         size="icon"
         type="button"
-        className="size-7 shrink-0"
+        className="size-7 shrink-0 text-primary"
         aria-label="Open chat history"
         aria-expanded={open}
         title="Chat history"

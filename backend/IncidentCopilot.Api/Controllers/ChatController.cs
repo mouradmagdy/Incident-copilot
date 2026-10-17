@@ -2,6 +2,7 @@ using IncidentCopilot.Api.Contracts.Chat;
 using IncidentCopilot.Api.Contracts.PendingActions;
 using IncidentCopilot.Application.Chat;
 using IncidentCopilot.Application.Conversations;
+using IncidentCopilot.Api.Security;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
@@ -30,7 +31,9 @@ public sealed class ChatController : ControllerBase
     public Task<IReadOnlyList<ConversationSummary>> ListConversations(
         CancellationToken cancellationToken)
     {
-        return _conversations.ListAsync(cancellationToken);
+        return _conversations.ListAsync(
+            User.GetRequiredUserId(),
+            cancellationToken);
     }
 
     [HttpGet("conversations/{id:guid}")]
@@ -41,6 +44,7 @@ public sealed class ChatController : ControllerBase
         CancellationToken cancellationToken)
     {
         var conversation = await _conversations.GetAsync(
+            User.GetRequiredUserId(),
             id,
             cancellationToken);
 
@@ -57,17 +61,20 @@ public sealed class ChatController : ControllerBase
         ChatRequest request,
         CancellationToken cancellationToken)
     {
+        var userId = User.GetRequiredUserId();
         var conversationId = request.ConversationId;
 
         if (conversationId is null)
         {
             var conversation = await _conversations.CreateAsync(
+                userId,
                 request.Message,
                 cancellationToken);
             conversationId = conversation.Id;
         }
 
         var userMessageAdded = await _conversations.AddMessageAsync(
+            userId,
             conversationId.Value,
             new AddConversationMessageRequest(
                 "user",
@@ -82,6 +89,7 @@ public sealed class ChatController : ControllerBase
 
         var response = await _chatService.AskStreamAsync(
             request.Message,
+            userId,
             cancellationToken);
 
         var content = new StringBuilder();
@@ -146,6 +154,7 @@ public sealed class ChatController : ControllerBase
             cancellationToken);
 
         await _conversations.AddMessageAsync(
+            userId,
             conversationId.Value,
             new AddConversationMessageRequest(
                 "assistant",

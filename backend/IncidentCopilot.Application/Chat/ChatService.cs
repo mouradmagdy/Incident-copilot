@@ -60,8 +60,17 @@ public sealed class ChatService : IChatService
         string message,
         CancellationToken cancellationToken)
     {
+        return AskStreamAsync(message, null, cancellationToken);
+    }
+
+    public Task<ChatStreamResponse> AskStreamAsync(
+        string message,
+        Guid? userId,
+        CancellationToken cancellationToken)
+    {
         return PrepareAgentStreamAsync(
             message,
+            userId,
             new List<ToolCallTrace>(),
             cancellationToken);
     }
@@ -73,6 +82,7 @@ public sealed class ChatService : IChatService
         var toolCalls = new List<ToolCallTrace>();
         var response = await PrepareAgentStreamAsync(
             message,
+            null,
             toolCalls,
             cancellationToken);
         var content = new StringBuilder();
@@ -100,6 +110,7 @@ public sealed class ChatService : IChatService
 
     private async Task<ChatStreamResponse> PrepareAgentStreamAsync(
         string message,
+        Guid? userId,
         ICollection<ToolCallTrace> toolCalls,
         CancellationToken cancellationToken)
     {
@@ -161,6 +172,7 @@ public sealed class ChatService : IChatService
             StreamResponseAsync(
                 systemPrompt,
                 message,
+                userId,
                 relevantChunks.Count > 0,
                 sources,
                 toolCalls,
@@ -172,6 +184,7 @@ public sealed class ChatService : IChatService
     private async IAsyncEnumerable<ChatStreamEvent> StreamResponseAsync(
         string systemPrompt,
         string message,
+        Guid? userId,
         bool hasRelevantDocumentation,
         IReadOnlyList<ChatSource> sources,
         ICollection<ToolCallTrace> toolCalls,
@@ -369,7 +382,8 @@ public sealed class ChatService : IChatService
                                     requestedToolCall.ArgumentsJson),
                                 systemPrompt,
                                 message,
-                                toolExchanges.ToArray()),
+                                toolExchanges.ToArray(),
+                                userId),
                             cancellationToken);
 
                     _logger.LogInformation(

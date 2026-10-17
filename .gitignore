@@ -54,6 +54,8 @@ coverage.cobertura.xml
 
 # Logs and temporary files
 **/logs/
+!frontend/src/components/logs/
+!frontend/src/components/logs/**
 *.log
 *.tmp
 *.temp

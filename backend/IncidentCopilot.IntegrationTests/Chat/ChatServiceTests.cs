@@ -550,6 +550,7 @@ public sealed class ChatServiceTests
 
         public Task<PendingActionView?> ConfirmAsync(
             Guid id,
+            Guid userId,
             CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
@@ -557,6 +558,7 @@ public sealed class ChatServiceTests
 
         public Task<PendingActionView?> CancelAsync(
             Guid id,
+            Guid userId,
             CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();

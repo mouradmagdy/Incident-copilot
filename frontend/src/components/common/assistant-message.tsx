@@ -4,7 +4,7 @@ import type { PendingActionDecision } from '../../services/pending-actions-api'
 import { PendingActionCard } from './pending-action-card'
 import { MessageDebug } from './message-debug'
 
-const avatarClasses = 'grid size-7 shrink-0 place-items-center rounded-[6px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white'
+const avatarClasses = 'grid size-7 shrink-0 place-items-center rounded-[6px] bg-primary text-[10px] font-bold text-white'
 
 interface AssistantMessageProps {
   message: ChatMessage

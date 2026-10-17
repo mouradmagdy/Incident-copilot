@@ -8,7 +8,8 @@ namespace IncidentCopilot.Api.Endpoints;
 public static class SimulationEndpoints
 {
     public static IEndpointRouteBuilder MapSimulationEndpoints(
-        this IEndpointRouteBuilder endpoints)
+        this IEndpointRouteBuilder endpoints,
+        bool includeToolFaults)
     {
         var group = endpoints
             .MapGroup("/api/simulation")
@@ -21,12 +22,15 @@ public static class SimulationEndpoints
             .Produces<SimulationScenarioResponse>()
             .ProducesValidationProblem();
 
-        group.MapGet("/tool-fault", GetToolFault)
-            .Produces<ToolFaultResponse>();
+        if (includeToolFaults)
+        {
+            group.MapGet("/tool-fault", GetToolFault)
+                .Produces<ToolFaultResponse>();
 
-        group.MapPost("/tool-fault", SetToolFault)
-            .Produces<ToolFaultResponse>()
-            .ProducesValidationProblem();
+            group.MapPost("/tool-fault", SetToolFault)
+                .Produces<ToolFaultResponse>()
+                .ProducesValidationProblem();
+        }
 
         return endpoints;
     }

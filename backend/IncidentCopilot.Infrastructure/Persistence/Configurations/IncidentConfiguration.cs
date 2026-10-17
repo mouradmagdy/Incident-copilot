@@ -39,5 +39,8 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 
         builder.HasIndex(incident => new { incident.Status, incident.StartedAtUtc })
             .IsDescending(false, true);
+
+        builder.HasIndex(incident => incident.StartedAtUtc)
+            .IsDescending(true);
     }
 }

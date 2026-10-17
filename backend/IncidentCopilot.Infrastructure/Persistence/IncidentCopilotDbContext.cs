@@ -13,6 +13,8 @@ public class IncidentCopilotDbContext : DbContext
 
     public DbSet<MonitoredService> Services => Set<MonitoredService>();
 
+    public DbSet<User> Users => Set<User>();
+
     public DbSet<ServiceMetric> ServiceMetrics => Set<ServiceMetric>();
 
     public DbSet<LogEvent> LogEvents => Set<LogEvent>();

@@ -8,11 +8,9 @@ import {
   YAxis,
 } from 'recharts'
 import type { TelemetryPoint } from '../../utils/telemetry'
-import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { CardContent } from '../ui/card-content'
 import { CardHeader } from '../ui/card-header'
-import { ChevronDown } from 'lucide-react'
 
 export function TelemetryChart({
   title,
@@ -32,10 +30,7 @@ export function TelemetryChart({
     <Card className="flex h-full min-w-0 flex-col">
       <CardHeader>
         <strong>{title}</strong>
-        <Button variant="outline" size="sm" type="button">
-          {dataKey === 'requestRate' ? 'Requests / sec' : 'Error rate'}
-          <ChevronDown size={12} />
-        </Button>
+        <span className="text-[9px] text-muted">{dataKey === 'requestRate' ? 'Requests / sec' : 'Error rate'}</span>
       </CardHeader>
       <CardContent className="min-h-[126px] flex-1 px-2 pb-2">
         {data.length === 0 ? (

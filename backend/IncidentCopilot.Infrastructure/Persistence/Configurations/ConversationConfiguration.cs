@@ -21,7 +21,16 @@ public sealed class ConversationConfiguration
         builder.Property(conversation => conversation.UpdatedAtUtc)
             .HasColumnType("timestamp with time zone");
 
-        builder.HasIndex(conversation => conversation.UpdatedAtUtc)
-            .IsDescending(true);
+        builder.HasIndex(conversation => new
+            {
+                conversation.UserId,
+                conversation.UpdatedAtUtc
+            })
+            .IsDescending(false, true);
+
+        builder.HasOne(conversation => conversation.User)
+            .WithMany(user => user.Conversations)
+            .HasForeignKey(conversation => conversation.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

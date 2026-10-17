@@ -20,6 +20,7 @@ public sealed class ConversationStore : IConversationStore
     }
 
     public async Task<ConversationView> CreateAsync(
+        Guid userId,
         string firstMessage,
         CancellationToken cancellationToken = default)
     {
@@ -27,6 +28,7 @@ public sealed class ConversationStore : IConversationStore
         var conversation = new Conversation
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             Title = BuildTitle(firstMessage),
             CreatedAtUtc = now,
             UpdatedAtUtc = now
@@ -44,10 +46,12 @@ public sealed class ConversationStore : IConversationStore
     }
 
     public async Task<IReadOnlyList<ConversationSummary>> ListAsync(
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Conversations
             .AsNoTracking()
+            .Where(conversation => conversation.UserId == userId)
             .OrderByDescending(conversation => conversation.UpdatedAtUtc)
             .Select(conversation => new ConversationSummary(
                 conversation.Id,
@@ -58,6 +62,7 @@ public sealed class ConversationStore : IConversationStore
     }
 
     public async Task<ConversationView?> GetAsync(
+        Guid userId,
         Guid id,
         CancellationToken cancellationToken = default)
     {
@@ -65,7 +70,9 @@ public sealed class ConversationStore : IConversationStore
             .AsNoTracking()
             .Include(item => item.Messages)
                 .ThenInclude(message => message.PendingAction)
-            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+            .SingleOrDefaultAsync(
+                item => item.Id == id && item.UserId == userId,
+                cancellationToken);
 
         if (conversation is null)
         {
@@ -87,13 +94,15 @@ public sealed class ConversationStore : IConversationStore
     }
 
     public async Task<bool> AddMessageAsync(
+        Guid userId,
         Guid conversationId,
         AddConversationMessageRequest request,
         CancellationToken cancellationToken = default)
     {
         var conversation = await _dbContext.Conversations
             .SingleOrDefaultAsync(
-                item => item.Id == conversationId,
+                item => item.Id == conversationId &&
+                    item.UserId == userId,
                 cancellationToken);
 
         if (conversation is null)

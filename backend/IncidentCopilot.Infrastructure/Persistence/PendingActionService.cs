@@ -50,6 +50,7 @@ public sealed class PendingActionService : IPendingActionService
         var action = new PendingAction
         {
             Id = Guid.NewGuid(),
+            UserId = request.UserId,
             ToolName = request.ToolName,
             ToolCallId = request.ToolCallId,
             ArgumentsJson = request.ArgumentsJson,
@@ -73,13 +74,17 @@ public sealed class PendingActionService : IPendingActionService
 
     public async Task<PendingActionView?> ConfirmAsync(
         Guid id,
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
         await using var transaction =
             await _dbContext.Database.BeginTransactionAsync(
                 cancellationToken);
 
-        var action = await FindForUpdateAsync(id, cancellationToken);
+        var action = await FindForUpdateAsync(
+            id,
+            userId,
+            cancellationToken);
 
         var unavailableWriteTool = false;
         var execution = await _executionGate.ExecuteAsync(
@@ -218,13 +223,17 @@ public sealed class PendingActionService : IPendingActionService
 
     public async Task<PendingActionView?> CancelAsync(
         Guid id,
+        Guid userId,
         CancellationToken cancellationToken = default)
     {
         await using var transaction =
             await _dbContext.Database.BeginTransactionAsync(
                 cancellationToken);
 
-        var action = await FindForUpdateAsync(id, cancellationToken);
+        var action = await FindForUpdateAsync(
+            id,
+            userId,
+            cancellationToken);
 
         if (action is null)
         {
@@ -246,6 +255,7 @@ public sealed class PendingActionService : IPendingActionService
 
     private Task<PendingAction?> FindForUpdateAsync(
         Guid id,
+        Guid userId,
         CancellationToken cancellationToken)
     {
         return _dbContext.PendingActions
@@ -253,7 +263,7 @@ public sealed class PendingActionService : IPendingActionService
                 $"""
                  SELECT *
                  FROM "PendingActions"
-                 WHERE "Id" = {id}
+                 WHERE "Id" = {id} AND "UserId" = {userId}
                  FOR UPDATE
                  """)
             .SingleOrDefaultAsync(cancellationToken);

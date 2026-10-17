@@ -1,14 +1,23 @@
 import { ApiError } from './base-api-service'
-import type { ChatSource, PendingAction } from '../types/api'
+import type {
+  ChatDebugInfo,
+  ChatSource,
+  Conversation,
+  ConversationSummary,
+  PendingAction,
+} from '../types/api'
 
 export type ChatStreamEvent =
+  | { type: 'conversation'; conversationId: string }
   | { type: 'delta'; content: string }
   | { type: 'pending_action'; action: PendingAction }
   | { type: 'sources'; sources: ChatSource[] }
+  | { type: 'debug'; debug: ChatDebugInfo }
 
 export const chatApi = {
   async sendMessage(
     message: string,
+    conversationId: string | null,
     onEvent: (event: ChatStreamEvent) => void,
   ) {
     const response = await fetch('/api/chat', {
@@ -17,7 +26,7 @@ export const chatApi = {
         'Content-Type': 'application/json',
         Accept: 'application/x-ndjson',
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, conversationId }),
     })
 
     if (!response.ok) {
@@ -51,5 +60,25 @@ export const chatApi = {
 
     buffer += decoder.decode()
     if (buffer.trim()) onEvent(JSON.parse(buffer) as ChatStreamEvent)
+  },
+
+  async listConversations() {
+    const response = await fetch('/api/chat/conversations')
+
+    if (!response.ok) {
+      throw new ApiError(response.status, 'Could not load conversations.')
+    }
+
+    return (await response.json()) as ConversationSummary[]
+  },
+
+  async getConversation(id: string) {
+    const response = await fetch(`/api/chat/conversations/${id}`)
+
+    if (!response.ok) {
+      throw new ApiError(response.status, 'Could not load the conversation.')
+    }
+
+    return (await response.json()) as Conversation
   },
 }

@@ -186,6 +186,30 @@ public sealed class PendingActionService : IPendingActionService
                 exception.GetType().Name);
         }
 
+        if (!string.IsNullOrWhiteSpace(
+                confirmedAction.AssistantResponse))
+        {
+            var sourceMessage = await _dbContext.ConversationMessages
+                .Include(message => message.Conversation)
+                .SingleOrDefaultAsync(
+                    message => message.PendingActionId == confirmedAction.Id,
+                    cancellationToken);
+
+            if (sourceMessage is not null)
+            {
+                var now = DateTime.UtcNow;
+                sourceMessage.Conversation.UpdatedAtUtc = now;
+                _dbContext.ConversationMessages.Add(
+                    new ConversationMessage
+                    {
+                        ConversationId = sourceMessage.ConversationId,
+                        Role = "assistant",
+                        Content = confirmedAction.AssistantResponse,
+                        CreatedAtUtc = now
+                    });
+            }
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 

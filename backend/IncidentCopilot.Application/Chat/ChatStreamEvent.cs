@@ -9,3 +9,6 @@ public sealed record ChatDeltaEvent(string Content)
 
 public sealed record ChatPendingActionEvent(PendingActionView Action)
     : ChatStreamEvent;
+
+public sealed record ChatDebugEvent(ChatDebugInfo Debug)
+    : ChatStreamEvent;

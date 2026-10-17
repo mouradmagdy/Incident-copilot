@@ -1,0 +1,15 @@
+.git
+.github
+.vs
+.tmp
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.vite
+**/__pycache__
+**/.pytest_cache
+**/.venv
+.env
+*.user
+*.suo

@@ -5,6 +5,13 @@ Compose profile:
 
 ```powershell
 docker compose --profile observability up -d
+```
+
+This starts the application stack and the four observability services. To run
+the API on the host instead, start the dependencies explicitly:
+
+```powershell
+docker compose --profile observability up -d postgres embedding-service tempo otel-collector prometheus grafana
 dotnet run --project backend/IncidentCopilot.Api --launch-profile http
 ```
 
@@ -42,8 +49,9 @@ http_server_request_duration_seconds_count{exported_job="IncidentCopilot.Api"}
 
 The Collector's Prometheus exporter preserves its own scrape `job` label and
 exposes OpenTelemetry's `service.name` as `exported_job`. The API exports
-development metrics every 10 seconds. The stack is not started by a normal
-`docker compose up`; the `--profile observability` flag is required.
+development metrics every 10 seconds. The observability services are not
+started by a normal `docker compose up`; the `--profile observability` flag is
+required.
 
 Stop it with:
 
@@ -51,4 +59,4 @@ Stop it with:
 docker compose --profile observability stop grafana prometheus otel-collector tempo
 ```
 
-This leaves the existing PostgreSQL development container running.
+This leaves the application services and PostgreSQL container running.

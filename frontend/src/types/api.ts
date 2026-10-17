@@ -49,6 +49,41 @@ export interface ChatSource {
   section: string | null
 }
 
+export interface ChatToolCallDebug {
+  name: string
+  durationMs: number | null
+  success: boolean | null
+}
+
+export interface ChatDebugInfo {
+  sources: ChatSource[]
+  toolCalls: ChatToolCallDebug[]
+  llmRoundCount: number
+  totalLatencyMs: number
+  pendingActionState: string
+}
+
+export interface ConversationSummary {
+  id: string
+  title: string
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export interface ConversationMessage {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  createdAtUtc: string
+  sources: ChatSource[]
+  debug: ChatDebugInfo | null
+  pendingAction: PendingAction | null
+}
+
+export interface Conversation extends ConversationSummary {
+  messages: ConversationMessage[]
+}
+
 export type PendingActionStatus =
   | 'Pending'
   | 'Completed'

@@ -24,6 +24,73 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedAtUtc")
+                        .IsDescending();
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.ConversationMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DebugJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("PendingActionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("SourcesJson")
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PendingActionId")
+                        .IsUnique();
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("ConversationMessages");
+                });
+
             modelBuilder.Entity("IncidentCopilot.Core.Entities.Incident", b =>
                 {
                     b.Property<int>("Id")
@@ -308,6 +375,24 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("ServiceMetrics");
                 });
 
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.ConversationMessage", b =>
+                {
+                    b.HasOne("IncidentCopilot.Core.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IncidentCopilot.Core.Entities.PendingAction", "PendingAction")
+                        .WithOne()
+                        .HasForeignKey("IncidentCopilot.Core.Entities.ConversationMessage", "PendingActionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("PendingAction");
+                });
+
             modelBuilder.Entity("IncidentCopilot.Core.Entities.Incident", b =>
                 {
                     b.HasOne("IncidentCopilot.Core.Entities.PendingAction", null)
@@ -347,6 +432,11 @@ namespace IncidentCopilot.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("IncidentCopilot.Core.Entities.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("IncidentCopilot.Core.Entities.KnowledgeDocument", b =>

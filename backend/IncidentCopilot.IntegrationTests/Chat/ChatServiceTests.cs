@@ -100,6 +100,43 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
+    public async Task AskStreamAsync_EmitsSafeExecutionDebugMetadata()
+    {
+        var toolCall = new LlmToolCall(
+            "call_metrics",
+            "get_service_metrics",
+            "{\"serviceName\":\"OrderService\",\"minutes\":15}");
+        var llmClient = new FakeLlmClient(
+            new LlmTurnResponse(null, [toolCall]),
+            new LlmTurnResponse("OrderService is healthy.", []));
+        var service = CreateService(
+            llmClient,
+            new FakeAgentTool("get_service_metrics"));
+
+        var response = await service.AskStreamAsync(
+            "Check OrderService metrics.",
+            CancellationToken.None);
+        var events = new List<ChatStreamEvent>();
+
+        await foreach (var chatEvent in response.Events)
+        {
+            events.Add(chatEvent);
+        }
+
+        var debug = Assert.Single(
+            events.OfType<ChatDebugEvent>()).Debug;
+        var tool = Assert.Single(debug.ToolCalls);
+
+        Assert.Equal("get_service_metrics", tool.Name);
+        Assert.NotNull(tool.DurationMs);
+        Assert.True(tool.DurationMs >= 0);
+        Assert.True(tool.Success);
+        Assert.Equal(2, debug.LlmRoundCount);
+        Assert.Equal("None", debug.PendingActionState);
+        Assert.True(debug.TotalLatencyMs >= 0);
+    }
+
+    [Fact]
     public async Task RunAgentAsync_MultiStepLoop_ReturnsAnswerAndToolTrace()
     {
         var metricsCall = new LlmToolCall(

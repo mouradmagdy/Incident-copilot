@@ -1,6 +1,7 @@
 using IncidentCopilot.Api.Endpoints;
 using IncidentCopilot.Application.AI.Tools;
 using IncidentCopilot.Application.Chat;
+using IncidentCopilot.Application.Conversations;
 using IncidentCopilot.Application.Knowledge;
 using IncidentCopilot.Application.Observability;
 using IncidentCopilot.Application.PendingActions;
@@ -120,6 +121,7 @@ builder.Services.AddSingleton<
 builder.Services.AddSingleton<IMarkdownChunker, MarkdownChunker>();
 builder.Services.AddScoped<IKnowledgeIndexer, KnowledgeIndexer>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IConversationStore, ConversationStore>();
 builder.Services.AddScoped<
     IPendingActionService,
     PendingActionService>();
@@ -227,10 +229,12 @@ builder.Services.AddScoped<IKnowledgeRetriever>(serviceProvider =>
     return retriever;
 });
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 if (app.Environment.IsDevelopment())
 {
@@ -245,6 +249,7 @@ if (app.Environment.IsDevelopment())
     var dbContext = scope.ServiceProvider
         .GetRequiredService<IncidentCopilotDbContext>();
 
+    await dbContext.Database.MigrateAsync();
     await DatabaseSeeder.SeedAsync(dbContext);
 }
 

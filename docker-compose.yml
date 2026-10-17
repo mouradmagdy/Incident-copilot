@@ -16,6 +16,57 @@ services:
       retries: 5
       start_period: 10s
 
+  embedding-service:
+    build:
+      context: ./embedding-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/IncidentCopilot.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=incident_copilot;Username=incident_copilot_dev;Password=incident_copilot_dev_password
+      EmbeddingService__BaseUrl: http://embedding-service:8000
+      Groq__ApiKey: ${GROQ_API_KEY:-}
+      OpenTelemetry__Otlp__Endpoint: http://otel-collector:4317
+    ports:
+      - "5087:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      embedding-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
   tempo:
     profiles: ["observability"]
     image: grafana/tempo:2.9.0

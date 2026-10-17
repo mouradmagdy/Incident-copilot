@@ -21,6 +21,11 @@ public class IncidentCopilotDbContext : DbContext
 
     public DbSet<PendingAction> PendingActions => Set<PendingAction>();
 
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+
+    public DbSet<ConversationMessage> ConversationMessages =>
+        Set<ConversationMessage>();
+
     public DbSet<KnowledgeDocument> KnowledgeDocuments =>
         Set<KnowledgeDocument>();
 

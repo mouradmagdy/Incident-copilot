@@ -1,4 +1,4 @@
-import { Bot, MessageSquare, Send, X } from 'lucide-react'
+import { Bot, MessageSquare, Plus, Send, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useChat } from '../../hooks/chat/use-chat'
 import { useUiStore } from '../../stores/ui-store'
@@ -10,6 +10,11 @@ export function AssistantPanel() {
   const [draft, setDraft] = useState('')
   const {
     messages,
+    conversations,
+    conversationId,
+    selectConversation,
+    startNewConversation,
+    isLoadingConversation,
     sendMessage,
     isPending,
     isError,
@@ -25,7 +30,7 @@ export function AssistantPanel() {
   }
 
   return (
-    <aside className="grid h-screen min-w-0 grid-rows-[auto_minmax(0,1fr)_auto_auto] bg-sidebar">
+    <aside className="grid h-screen min-w-0 grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] bg-sidebar">
       <header className="flex min-h-16 items-center gap-2.5 border-b border-border px-3.5 py-3">
         <span className="grid size-6 shrink-0 place-items-center self-center rounded-[5px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-white">
           <Bot size={16} />
@@ -39,12 +44,42 @@ export function AssistantPanel() {
           size="icon"
           type="button"
           className="shrink-0"
+          aria-label="Start a new conversation"
+          title="New conversation"
+          disabled={isPending || isLoadingConversation}
+          onClick={startNewConversation}
+        >
+          <Plus size={16} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          type="button"
+          className="shrink-0"
           aria-label="Close AI assistant"
           onClick={() => setAssistantOpen(false)}
         >
           <X size={16} />
         </Button>
       </header>
+
+      {conversations.length > 0 && (
+        <div className="border-b border-border px-3 py-2">
+          <label className="sr-only" htmlFor="conversation-select">Conversation</label>
+          <select
+            id="conversation-select"
+            className="h-7 w-full rounded-md border border-border bg-surface px-2 text-[9px] text-text outline-none"
+            value={conversationId ?? ''}
+            disabled={isPending || isLoadingConversation}
+            onChange={(event) => selectConversation(event.target.value)}
+          >
+            {!conversationId && <option value="">New conversation</option>}
+            {conversations.map((conversation) => (
+              <option key={conversation.id} value={conversation.id}>{conversation.title}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="flex flex-col gap-[11px] overflow-y-auto p-3.5" aria-live="polite">
         {messages.length === 0 && (
@@ -92,10 +127,10 @@ export function AssistantPanel() {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Ask anything about your system…"
-          disabled={isPending}
+          disabled={isPending || isLoadingConversation}
           className="h-8 px-2.5 text-[9px]"
         />
-        <Button size="icon" type="submit" aria-label="Send message" disabled={isPending || draft.trim().length === 0}>
+        <Button size="icon" type="submit" aria-label="Send message" disabled={isPending || isLoadingConversation || draft.trim().length === 0}>
           <Send size={16} />
         </Button>
       </form>

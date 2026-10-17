@@ -23,6 +23,11 @@ app = FastAPI(
 )
 
 
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 @app.post("/embed")
 def embed(
     texts: Annotated[list[str], Body()],

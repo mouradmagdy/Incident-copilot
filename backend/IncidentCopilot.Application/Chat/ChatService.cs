@@ -103,6 +103,8 @@ public sealed class ChatService : IChatService
         ICollection<ToolCallTrace> toolCalls,
         CancellationToken cancellationToken)
     {
+        var totalStopwatch = Stopwatch.StartNew();
+
         if (string.IsNullOrWhiteSpace(message))
         {
             throw new ArgumentException(
@@ -160,7 +162,9 @@ public sealed class ChatService : IChatService
                 systemPrompt,
                 message,
                 relevantChunks.Count > 0,
+                sources,
                 toolCalls,
+                totalStopwatch,
                 cancellationToken),
             sources);
     }
@@ -169,7 +173,9 @@ public sealed class ChatService : IChatService
         string systemPrompt,
         string message,
         bool hasRelevantDocumentation,
+        IReadOnlyList<ChatSource> sources,
         ICollection<ToolCallTrace> toolCalls,
+        Stopwatch totalStopwatch,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var llmStopwatch = Stopwatch.StartNew();
@@ -184,6 +190,7 @@ public sealed class ChatService : IChatService
         var completedRounds = 0;
         var outcome = "error";
         var toolExchanges = new List<LlmToolExchange>();
+        var debugToolCalls = new List<ChatToolCallDebug>();
 
         try
         {
@@ -255,6 +262,12 @@ public sealed class ChatService : IChatService
                     }
 
                     outcome = "success";
+                    yield return CreateDebugEvent(
+                        sources,
+                        debugToolCalls,
+                        completedRounds,
+                        totalStopwatch,
+                        "None");
                     yield break;
                 }
 
@@ -273,6 +286,16 @@ public sealed class ChatService : IChatService
                     outcome = "round_limit";
                     yield return new ChatDeltaEvent(
                         AgentRoundLimitMessage);
+                    debugToolCalls.Add(new ChatToolCallDebug(
+                        requestedToolCall.Name,
+                        null,
+                        null));
+                    yield return CreateDebugEvent(
+                        sources,
+                        debugToolCalls,
+                        completedRounds,
+                        totalStopwatch,
+                        "None");
                     yield break;
                 }
 
@@ -303,6 +326,10 @@ public sealed class ChatService : IChatService
 
                         if (!decision.Allowed)
                         {
+                            debugToolCalls.Add(new ChatToolCallDebug(
+                                requestedTool.Name,
+                                null,
+                                null));
                             _logger.LogInformation(
                                 "Tool proposal {ToolName} was rejected by policy: {RejectionReason}",
                                 requestedTool.Name,
@@ -351,6 +378,10 @@ public sealed class ChatService : IChatService
                         pendingAction.Id);
 
                     outcome = "pending_approval";
+                    debugToolCalls.Add(new ChatToolCallDebug(
+                        requestedTool.Name,
+                        null,
+                        null));
 
                     if (!string.IsNullOrWhiteSpace(proposalMessage))
                     {
@@ -360,10 +391,17 @@ public sealed class ChatService : IChatService
 
                     yield return new ChatPendingActionEvent(
                         pendingAction);
+                    yield return CreateDebugEvent(
+                        sources,
+                        debugToolCalls,
+                        completedRounds,
+                        totalStopwatch,
+                        pendingAction.Status);
                     yield break;
                 }
 
                 ToolResult toolResult;
+                var toolStopwatch = Stopwatch.StartNew();
 
                 try
                 {
@@ -386,11 +424,17 @@ public sealed class ChatService : IChatService
                         $"Tool '{requestedToolCall.Name}' failed unexpectedly.");
                 }
 
+                toolStopwatch.Stop();
+
                 toolCalls.Add(new ToolCallTrace(
                     requestedToolCall.Name,
                     requestedToolCall.ArgumentsJson,
                     toolResult.Success,
                     toolResult.Error));
+                debugToolCalls.Add(new ChatToolCallDebug(
+                    requestedToolCall.Name,
+                    toolStopwatch.Elapsed.TotalMilliseconds,
+                    toolResult.Success));
 
                 _logger.LogInformation(
                     "Tool completed: {ToolName}. Success: {ToolSucceeded}.",
@@ -441,6 +485,21 @@ public sealed class ChatService : IChatService
                 "LLM duration: {LlmDurationMs:F0} ms.",
                 llmStopwatch.Elapsed.TotalMilliseconds);
         }
+    }
+
+    private static ChatDebugEvent CreateDebugEvent(
+        IReadOnlyList<ChatSource> sources,
+        IReadOnlyList<ChatToolCallDebug> toolCalls,
+        int llmRoundCount,
+        Stopwatch totalStopwatch,
+        string pendingActionState)
+    {
+        return new ChatDebugEvent(new ChatDebugInfo(
+            sources,
+            toolCalls.ToArray(),
+            llmRoundCount,
+            totalStopwatch.Elapsed.TotalMilliseconds,
+            pendingActionState));
     }
 
     private async Task<string?> GenerateApprovalExplanationAsync(

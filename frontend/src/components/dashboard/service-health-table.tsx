@@ -69,13 +69,13 @@ export function ServiceHealthTable({ rows }: { rows: ServiceHealthRow[] }) {
   })
 
   return (
-    <Card className="min-w-0">
+    <Card className="flex h-full min-w-0 flex-col overflow-hidden">
       <CardHeader>
         <strong>Service Health</strong>
         <Button variant="outline" size="sm" type="button">View all services</Button>
       </CardHeader>
-      <div className="overflow-x-auto px-3 pb-[9px]">
-        <table className="w-full border-collapse text-left text-[9px] whitespace-nowrap [&_td]:border-t [&_td]:border-border-subtle [&_td]:px-[7px] [&_td]:py-2 [&_td]:text-text [&_th]:px-[7px] [&_th]:py-1.5 [&_th]:font-medium [&_th]:text-muted">
+      <div className="flex min-h-0 flex-1 px-2.5 pb-2">
+        <table className="service-health-table h-full w-full table-fixed border-collapse text-left text-[9px] whitespace-nowrap [&_td]:overflow-hidden [&_td]:border-t [&_td]:border-border-subtle [&_td]:px-1.5 [&_td]:py-1.5 [&_td]:text-ellipsis [&_td]:text-text [&_th]:overflow-hidden [&_th]:px-1.5 [&_th]:py-1 [&_th]:text-ellipsis [&_th]:font-medium [&_th]:text-muted">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>

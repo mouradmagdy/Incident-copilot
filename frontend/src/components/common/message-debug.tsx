@@ -5,13 +5,13 @@ export function MessageDebug({ debug }: { debug?: ChatDebugInfo }) {
   if (!debug) return null
 
   return (
-    <details className="group mt-1.5 rounded-md border border-border-subtle bg-surface/70 text-[8px] text-muted">
-      <summary className="flex cursor-pointer list-none items-center gap-1 px-2 py-1.5 font-semibold text-text [&::-webkit-details-marker]:hidden">
-        <Bug size={11} aria-hidden="true" />
+    <details className="group mt-2 rounded-md border border-border-subtle bg-surface/70 text-[10px] leading-relaxed text-muted">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 px-2.5 py-2 font-semibold text-text [&::-webkit-details-marker]:hidden">
+        <Bug size={12} aria-hidden="true" />
         Developer details
-        <ChevronDown className="ml-auto transition-transform group-open:rotate-180" size={11} aria-hidden="true" />
+        <ChevronDown className="ml-auto transition-transform group-open:rotate-180" size={12} aria-hidden="true" />
       </summary>
-      <div className="space-y-2 border-t border-border-subtle px-2 py-2">
+      <div className="space-y-2.5 border-t border-border-subtle px-2.5 py-2.5">
         <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
           <dt>LLM rounds</dt><dd className="text-right font-medium text-text">{debug.llmRoundCount}</dd>
           <dt>Total latency</dt><dd className="text-right font-medium text-text">{Math.round(debug.totalLatencyMs)} ms</dd>

@@ -5,7 +5,7 @@ import { MetricCard } from './metric-card'
 
 export function SummaryGrid({ serviceCount, summary }: { serviceCount: number; summary: DashboardSummary }) {
   return (
-    <section className="grid grid-cols-4 gap-2.5 max-[940px]:grid-cols-2 max-[500px]:grid-cols-1" aria-label="System summary">
+    <section className="dashboard-summary grid grid-cols-4 gap-2" aria-label="System summary">
       <MetricCard
         label="Services"
         value={formatNumber(serviceCount)}

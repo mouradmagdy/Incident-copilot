@@ -4,7 +4,7 @@ import type { PendingActionDecision } from '../../services/pending-actions-api'
 import { PendingActionCard } from './pending-action-card'
 import { MessageDebug } from './message-debug'
 
-const avatarClasses = 'grid size-[23px] shrink-0 place-items-center rounded-[5px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[9px] font-bold text-white'
+const avatarClasses = 'grid size-7 shrink-0 place-items-center rounded-[6px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white'
 
 interface AssistantMessageProps {
   message: ChatMessage
@@ -25,10 +25,10 @@ export function AssistantMessage({
   const isAssistant = message.role === 'assistant'
 
   return (
-    <div className={`flex max-w-full items-start gap-2 ${isAssistant ? 'self-start' : 'self-end'}`}>
+    <div className={`flex max-w-full items-start gap-2.5 ${isAssistant ? 'self-start' : 'self-end'}`}>
       {isAssistant && <span className={avatarClasses}>AI</span>}
       {isAssistant ? (
-        <div className="min-w-0 max-w-[calc(100%-31px)]">
+        <div className="min-w-0 max-w-[calc(100%-38px)]">
           {message.content && <MarkdownMessage content={message.content} />}
           {message.pendingAction && (
             <PendingActionCard
@@ -41,7 +41,7 @@ export function AssistantMessage({
           <MessageDebug debug={message.debug} />
         </div>
       ) : (
-        <p className="m-0 whitespace-pre-wrap rounded-lg bg-primary-soft px-[11px] py-[9px] text-[10px] leading-[1.45] text-primary-text">
+        <p className="m-0 whitespace-pre-wrap rounded-lg bg-primary-soft px-3 py-2.5 text-xs leading-relaxed text-primary-text">
           {message.content}
         </p>
       )}

@@ -56,7 +56,7 @@ export function PendingActionCard({
 
   return (
     <Card className={`mt-2 overflow-hidden ${cardStyles[action.status]}`}>
-      <CardHeader className="items-start gap-2 border-b border-border/65">
+      <CardHeader className="items-start gap-2 border-b border-border/65 text-xs">
         <span className="flex min-w-0 items-center gap-2 font-semibold">
           <span
             className={`grid size-6 shrink-0 place-items-center rounded-md ${statusStyles[action.status]}`}
@@ -72,18 +72,18 @@ export function PendingActionCard({
           {headerLabels[action.status]}
         </span>
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-semibold ${statusStyles[action.status]}`}
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusStyles[action.status]}`}
         >
           {action.status}
         </span>
       </CardHeader>
 
       <CardContent className="pt-3">
-        <p className="m-0 text-[10px] font-medium leading-relaxed text-text-strong">
+        <p className="m-0 text-xs font-medium leading-relaxed text-text-strong">
           {action.description}
         </p>
         {isPending && (
-          <p className="mt-1.5 mb-0 text-[9px] leading-relaxed text-muted">
+          <p className="mt-1.5 mb-0 text-[11px] leading-relaxed text-muted">
             This changes system state and will not run without confirmation.
           </p>
         )}
@@ -91,7 +91,7 @@ export function PendingActionCard({
         {action.status === 'Completed' && (
           <div className="mt-2 rounded-md border border-success/20 bg-surface/65 p-2.5">
             {incident ? (
-              <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-[9px]">
+              <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-[11px]">
                 <dt className="text-muted">Incident</dt>
                 <dd className="m-0 truncate font-semibold text-text-strong">
                   #{incident.id} — {incident.title}
@@ -106,7 +106,7 @@ export function PendingActionCard({
                 </dd>
               </dl>
             ) : (
-              <p className="m-0 flex items-center gap-1.5 text-[9px] font-medium text-success">
+              <p className="m-0 flex items-center gap-1.5 text-[11px] font-medium text-success">
                 <CheckCircle2 size={12} />
                 Action completed successfully.
               </p>
@@ -115,27 +115,27 @@ export function PendingActionCard({
         )}
 
         {action.status === 'Cancelled' && (
-          <p className="mt-2 mb-0 flex items-center gap-1.5 text-[9px] font-medium text-muted">
+          <p className="mt-2 mb-0 flex items-center gap-1.5 text-[11px] font-medium text-muted">
             <XCircle size={12} />
             Action cancelled. Nothing was executed.
           </p>
         )}
 
         {action.status === 'Expired' && (
-          <p className="mt-2 mb-0 flex items-center gap-1.5 text-[9px] font-medium text-muted">
+          <p className="mt-2 mb-0 flex items-center gap-1.5 text-[11px] font-medium text-muted">
             <XCircle size={12} />
             This proposal expired without executing the action.
           </p>
         )}
 
         {action.status === 'Failed' && (
-          <p className="mt-2 mb-0 text-[9px] leading-relaxed text-danger" role="alert">
+          <p className="mt-2 mb-0 text-[11px] leading-relaxed text-danger" role="alert">
             {action.error ?? 'The action could not be completed.'}
           </p>
         )}
 
         {hasError && (
-          <p className="mt-2 mb-0 text-[9px] text-danger" role="alert">
+          <p className="mt-2 mb-0 text-[11px] text-danger" role="alert">
             The request failed. The action was not changed; please try again.
           </p>
         )}
@@ -143,6 +143,7 @@ export function PendingActionCard({
         {isPending && (
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Button
+              className="text-[11px]"
               type="button"
               size="sm"
               onClick={() => onDecision(action.id, 'confirm')}
@@ -156,6 +157,7 @@ export function PendingActionCard({
               Confirm
             </Button>
             <Button
+              className="text-[11px]"
               type="button"
               variant="outline"
               size="sm"

@@ -1,7 +1,6 @@
 import { DashboardHeader } from '../components/dashboard/dashboard-header'
 import { RecentIncidents } from '../components/dashboard/recent-incidents'
 import { RecentLogs } from '../components/dashboard/recent-logs'
-import { ScenarioSwitcher } from '../components/dashboard/scenario-switcher'
 import { ServiceHealthTable } from '../components/dashboard/service-health-table'
 import { SummaryGrid } from '../components/dashboard/summary-grid'
 import { TelemetryChart } from '../components/dashboard/telemetry-chart'
@@ -18,8 +17,14 @@ export function OverviewPage() {
   const isRefreshing = metricsQuery.isFetching || logsQuery.isFetching
 
   return (
-    <div className="min-w-0 px-[18px] pt-3.5 pb-7 max-[720px]:px-3 max-[720px]:pt-[15px] max-[720px]:pb-6">
-      <DashboardHeader isRefreshing={isRefreshing} onRefresh={refresh} />
+    <div className="dashboard-container flex min-h-full min-w-0 flex-col px-4 pt-2.5 pb-4 max-[720px]:px-3">
+      <DashboardHeader
+        isRefreshing={isRefreshing}
+        onRefresh={refresh}
+        scenario={scenarioQuery.data?.scenario}
+        isScenarioPending={scenarioMutation.isPending}
+        onScenarioChange={(scenario) => scenarioMutation.mutate(scenario)}
+      />
 
       {hasError && (
         <div className="mb-2.5 rounded-[7px] border border-danger/35 bg-danger-soft px-[11px] py-[9px] text-[10px] text-danger" role="alert">
@@ -27,22 +32,14 @@ export function OverviewPage() {
         </div>
       )}
 
-      {scenarioQuery.isSuccess && (
-        <ScenarioSwitcher
-          scenario={scenarioQuery.data.scenario}
-          isPending={scenarioMutation.isPending}
-          onChange={(scenario) => scenarioMutation.mutate(scenario)}
-        />
-      )}
-
       <SummaryGrid serviceCount={services.length} summary={summary} />
 
-      <section className="mt-2.5 grid grid-cols-2 gap-2.5 max-[940px]:grid-cols-1" aria-label="Telemetry trends">
+      <section className="dashboard-telemetry mt-2 grid flex-[1.3_1_170px] grid-cols-2 gap-2" aria-label="Telemetry trends">
         <TelemetryChart title="Request Rate" dataKey="requestRate" data={telemetrySeries} color="blue" />
         <TelemetryChart title="Error Rate (%)" dataKey="errorRate" data={telemetrySeries} color="red" />
       </section>
 
-      <section className="mt-2.5 grid grid-cols-[minmax(0,1.8fr)_minmax(230px,.9fr)] gap-2.5 max-[940px]:grid-cols-1">
+      <section className="dashboard-health mt-2 grid flex-[1_1_155px] grid-cols-[minmax(0,1.8fr)_minmax(220px,.9fr)] gap-2">
         <ServiceHealthTable rows={serviceRows} />
         <RecentIncidents />
       </section>

@@ -1,5 +1,6 @@
 import { LogOut, PanelLeftOpen } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import copilotLogo from '../../assets/incident-copilot-logo.png'
 import { useSidebar } from '../../hooks/ui/use-sidebar'
 import { navigationItems } from '../../router/navigation'
 import { Sidebar } from '../ui/sidebar'
@@ -17,7 +18,9 @@ export function AppSidebar() {
       <SidebarHeader>
         {open ? (
           <div className="flex h-[34px] items-center gap-2 overflow-hidden px-[5px] text-sm whitespace-nowrap text-text-strong">
-            <span className="grid size-[23px] shrink-0 place-items-center rounded-[5px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white">IC</span>
+            <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-[7px] bg-white shadow-sm">
+              <img className="size-full scale-[1.72] object-cover" src={copilotLogo} alt="" draggable={false} />
+            </span>
             <strong className="max-w-[150px] overflow-hidden whitespace-nowrap opacity-100 transition-[max-width,opacity] duration-200">Incident Copilot</strong>
           </div>
         ) : (
@@ -28,9 +31,9 @@ export function AppSidebar() {
             title="Expand sidebar"
             onClick={toggle}
           >
-            <span className="relative grid size-[23px] shrink-0 place-items-center rounded-[5px] bg-linear-to-br from-[#4778ff] to-[#7548f8] text-[10px] font-bold text-white">
-              <span className="col-start-1 row-start-1 transition duration-150 group-hover/logo:scale-80 group-hover/logo:opacity-0 group-focus-visible/logo:scale-80 group-focus-visible/logo:opacity-0">IC</span>
-              <PanelLeftOpen className="col-start-1 row-start-1 scale-80 opacity-0 transition duration-150 group-hover/logo:scale-100 group-hover/logo:opacity-100 group-focus-visible/logo:scale-100 group-focus-visible/logo:opacity-100" size={15} />
+            <span className="relative grid size-7 shrink-0 place-items-center overflow-hidden rounded-[7px] bg-white text-slate-700 shadow-sm">
+              <img className="col-start-1 row-start-1 size-full scale-[1.72] object-cover transition duration-150 group-hover/logo:scale-[1.4] group-hover/logo:opacity-0 group-focus-visible/logo:scale-[1.4] group-focus-visible/logo:opacity-0" src={copilotLogo} alt="" draggable={false} />
+              <PanelLeftOpen className="col-start-1 row-start-1 scale-80 opacity-0 transition duration-150 group-hover/logo:scale-100 group-hover/logo:opacity-100 group-focus-visible/logo:scale-100 group-focus-visible/logo:opacity-100" size={16} />
             </span>
           </button>
         )}

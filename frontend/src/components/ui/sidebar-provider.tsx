@@ -16,7 +16,7 @@ export function SidebarProvider({
   return (
     <SidebarContext.Provider value={value}>
       <div
-        className="group/sidebar grid min-h-screen grid-cols-[184px_minmax(0,1fr)] bg-background transition-[grid-template-columns] duration-300 ease-in-out data-[sidebar-state=collapsed]:grid-cols-[44px_minmax(0,1fr)] max-[720px]:block"
+        className="app-shell group/sidebar grid h-screen w-full min-w-0 grid-cols-[184px_minmax(0,1fr)] overflow-hidden bg-background transition-[grid-template-columns] duration-200 ease-out will-change-[grid-template-columns] motion-reduce:transition-none data-[sidebar-state=collapsed]:grid-cols-[44px_minmax(0,1fr)] max-[720px]:block"
         data-sidebar-state={open ? 'expanded' : 'collapsed'}
         data-assistant-state={assistantOpen ? 'open' : 'closed'}
       >

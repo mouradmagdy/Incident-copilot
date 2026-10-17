@@ -29,7 +29,7 @@ export function TelemetryChart({
   const gradientId = `gradient-${dataKey}`
 
   return (
-    <Card className="min-w-0">
+    <Card className="flex h-full min-w-0 flex-col">
       <CardHeader>
         <strong>{title}</strong>
         <Button variant="outline" size="sm" type="button">
@@ -37,7 +37,7 @@ export function TelemetryChart({
           <ChevronDown size={12} />
         </Button>
       </CardHeader>
-      <CardContent className="h-[150px] px-2 pb-2">
+      <CardContent className="min-h-[126px] flex-1 px-2 pb-2">
         {data.length === 0 ? (
           <div className="grid h-full min-h-[76px] place-items-center text-center text-[10px] text-muted">Waiting for telemetry samples</div>
         ) : (

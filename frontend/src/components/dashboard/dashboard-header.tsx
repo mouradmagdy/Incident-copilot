@@ -1,7 +1,8 @@
-import { Bot, Moon, RefreshCw, Sun } from 'lucide-react'
+import { Bot, ChevronDown, Moon, RefreshCw, Sun } from 'lucide-react'
 import { useUiStore, type TimeRange } from '../../stores/ui-store'
-import { cn } from '../../utils/classnames'
+import type { SimulationScenario } from '../../types/api'
 import { Button } from '../ui/button'
+import { ScenarioSwitcher } from './scenario-switcher'
 
 const timeRanges: Array<{ value: TimeRange; label: string }> = [
   { value: '1h', label: 'Last 1h' },
@@ -13,9 +14,15 @@ const timeRanges: Array<{ value: TimeRange; label: string }> = [
 export function DashboardHeader({
   isRefreshing,
   onRefresh,
+  scenario,
+  isScenarioPending,
+  onScenarioChange,
 }: {
   isRefreshing: boolean
   onRefresh: () => void
+  scenario?: SimulationScenario
+  isScenarioPending: boolean
+  onScenarioChange: (scenario: SimulationScenario) => void
 }) {
   const {
     theme,
@@ -27,28 +34,33 @@ export function DashboardHeader({
   } = useUiStore()
 
   return (
-    <header className="mb-3 flex min-h-11 items-center justify-between gap-5 max-[940px]:flex-col max-[940px]:items-start">
-      <div>
-        <h1 className="mb-[3px] text-xl leading-[1.1] tracking-[-.025em] text-text-strong">System Overview</h1>
-        <p className="text-[11px] text-muted">Monitor the health and performance of your services in real time.</p>
+    <header className="dashboard-header mb-2 flex min-h-10 flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="min-w-[190px] flex-1">
+        <h1 className="mb-0.5 text-lg leading-[1.1] tracking-[-.025em] text-text-strong">System Overview</h1>
+        <p className="text-[10px] text-muted">Monitor the health and performance of your services in real time.</p>
       </div>
 
-      <div className="flex items-center gap-[7px] max-[940px]:w-full max-[500px]:flex-wrap">
-        <div className="inline-flex rounded-[7px] border border-border bg-surface p-[3px] max-[940px]:flex-1 max-[940px]:overflow-x-auto" aria-label="Telemetry time range">
-          {timeRanges.map((range) => (
-            <button
-              key={range.value}
-              type="button"
-              className={cn(
-                'cursor-pointer rounded-[5px] border-0 bg-transparent px-[9px] py-1.5 text-[9px] text-muted',
-                timeRange === range.value && 'bg-primary-soft font-semibold text-primary-text',
-              )}
-              onClick={() => setTimeRange(range.value)}
-            >
-              {range.label}
-            </button>
-          ))}
-        </div>
+      <div className="dashboard-header-controls ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+        {scenario && (
+          <ScenarioSwitcher
+            scenario={scenario}
+            isPending={isScenarioPending}
+            onChange={onScenarioChange}
+          />
+        )}
+        <label className="relative">
+          <span className="sr-only">Telemetry time range</span>
+          <select
+            value={timeRange}
+            onChange={(event) => setTimeRange(event.target.value as TimeRange)}
+            className="h-8 cursor-pointer appearance-none rounded-[7px] border border-border bg-surface py-0 pr-7 pl-2.5 text-[9px] font-medium text-text outline-none focus-visible:border-primary"
+          >
+            {timeRanges.map((range) => (
+              <option key={range.value} value={range.value}>{range.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-muted" size={12} aria-hidden="true" />
+        </label>
         <Button variant="outline" size="icon" type="button" aria-label="Refresh telemetry" onClick={onRefresh}>
           <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
         </Button>
@@ -61,17 +73,16 @@ export function DashboardHeader({
         >
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </Button>
-        {!assistantOpen && (
-          <Button
-            variant="outline"
-            size="icon"
-            type="button"
-            aria-label="Open AI assistant"
-            onClick={() => setAssistantOpen(true)}
-          >
-            <Bot size={16} />
-          </Button>
-        )}
+        <Button
+          variant={assistantOpen ? 'default' : 'outline'}
+          size="icon"
+          type="button"
+          aria-label={assistantOpen ? 'Close AI assistant' : 'Open AI assistant'}
+          aria-pressed={assistantOpen}
+          onClick={() => setAssistantOpen(!assistantOpen)}
+        >
+          <Bot size={16} />
+        </Button>
       </div>
     </header>
   )

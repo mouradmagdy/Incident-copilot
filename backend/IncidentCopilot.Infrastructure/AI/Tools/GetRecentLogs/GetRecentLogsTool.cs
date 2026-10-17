@@ -147,6 +147,40 @@ public sealed class GetRecentLogsTool : IAgentTool
                     SerializerOptions));
         }
 
+        if (_faultInjector.CurrentFault is
+            ToolFault.HealthyMetrics or ToolFault.SeriousMetrics)
+        {
+            var fixtureLogs = _faultInjector.CurrentFault == ToolFault.SeriousMetrics
+                ? new[]
+                {
+                    new RecentLogEntry(
+                        DateTime.UtcNow.AddMinutes(-2),
+                        "Error",
+                        "Database connection pool exhausted while processing orders.",
+                        "TimeoutException",
+                        "security-eval-serious-1"),
+                    new RecentLogEntry(
+                        DateTime.UtcNow.AddMinutes(-1),
+                        "Error",
+                        "Order processing timed out waiting for a database connection.",
+                        "TimeoutException",
+                        "security-eval-serious-2")
+                }
+                : Array.Empty<RecentLogEntry>();
+
+            var deterministicResponse = new RecentLogsToolResponse(
+                arguments.ServiceName,
+                Math.Clamp(arguments.Minutes, 1, 60),
+                arguments.MinimumLevel,
+                fixtureLogs);
+
+            return new ToolResult(
+                true,
+                JsonSerializer.Serialize(
+                    deterministicResponse,
+                    SerializerOptions));
+        }
+
         var minutes = Math.Clamp(arguments.Minutes, 1, 60);
         var maxResults = Math.Clamp(arguments.MaxResults, 1, 100);
         var cutoff = DateTime.UtcNow.AddMinutes(-minutes);

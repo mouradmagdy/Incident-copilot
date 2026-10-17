@@ -5,7 +5,7 @@
 <h1 align="center">Incident Copilot</h1>
 
 <p align="center">
-  An AI-assisted incident investigation platform that grounds answers in live telemetry and internal runbooks, while keeping operational writes behind explicit human approval.
+  An AI-assisted incident investigation platform that grounds answers in service telemetry and internal runbooks, while keeping operational writes behind explicit human approval.
 </p>
 
 <p align="center">
@@ -13,7 +13,6 @@
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827" />
   <img alt="PostgreSQL 17" src="https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white" />
   <img alt="Docker Compose" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
-  <img alt="OpenTelemetry" src="https://img.shields.io/badge/OpenTelemetry-instrumented-7B61FF?logo=opentelemetry&logoColor=white" />
 </p>
 
 Incident Copilot is a full-stack portfolio project for investigating simulated production incidents. It combines retrieval-augmented generation (RAG), multi-step tool calling, streaming chat, durable user conversations, and an approval-gated write workflow in one reproducible local environment.
@@ -28,9 +27,7 @@ The project deliberately separates *investigation* from *action*: the model may 
 - **Streaming and persistence:** streams newline-delimited JSON (NDJSON) while saving user-scoped conversations, messages, sources, execution metadata, and pending-action state.
 - **Operational dashboard:** includes service health, time-series telemetry, searchable logs, incident management, and switchable failure scenarios.
 - **Authentication:** uses password hashing and JWTs stored in `HttpOnly`, `SameSite=Strict` cookies; API routes are authenticated by default.
-- **Observability:** emits custom and framework OpenTelemetry traces and metrics to an optional Collector, Prometheus, Tempo, and Grafana stack.
-- **Evaluation harness:** includes committed retrieval, tool-calling, prompt-injection, runtime-failure, and latency datasets and results.
-- **Reproducible environment:** starts the frontend, API, embedding service, pgvector database, and optional observability stack with Docker Compose.
+- **Reproducible environment:** starts the frontend, API, embedding service, and pgvector database with Docker Compose.
 
 ## Architecture
 
@@ -53,12 +50,6 @@ flowchart LR
     PENDING -->|User confirms| WRITE[Create incident tool]
     WRITE --> PG
     API --> PG
-
-    API -->|OTLP| COLLECTOR[OpenTelemetry Collector]
-    COLLECTOR --> PROM[Prometheus]
-    COLLECTOR --> TEMPO[Tempo]
-    PROM --> GRAFANA[Grafana]
-    TEMPO --> GRAFANA
 ```
 
 The backend follows a layered architecture:
@@ -68,7 +59,7 @@ The backend follows a layered architecture:
 | `IncidentCopilot.Core` | Domain entities, enums, and provider-independent AI contracts |
 | `IncidentCopilot.Application` | Agent orchestration, RAG interfaces, approval policies, and application ports |
 | `IncidentCopilot.Infrastructure` | EF Core/PostgreSQL persistence, pgvector retrieval, Groq and embedding clients, and tool implementations |
-| `IncidentCopilot.Api` | Authentication, HTTP/streaming endpoints, dependency injection, health checks, and development-only simulation/evaluation routes |
+| `IncidentCopilot.Api` | Authentication, HTTP/streaming endpoints, dependency injection, health checks, and development-only simulation routes |
 
 ## How an investigation works
 
@@ -94,21 +85,7 @@ Runbooks, user input, logs, tool arguments, and tool output are treated as untru
 | Database row lock and state transition | Prevents repeated confirmation from executing the write twice |
 | Sanitized developer metadata | Exposes sources, durations, and tool names without prompts, credentials, raw results, or hidden reasoning |
 
-These controls demonstrate a safer agent design; they do not make this demo a production security boundary. See [Known limitations](#known-limitations) and the committed [evaluation report](docs/evaluation.md).
-
-## Evaluation results
-
-The repository includes raw inputs, runnable scripts, and committed result artifacts rather than reporting percentages alone.
-
-| Area | Evaluated sample | Committed result |
-| --- | ---: | --- |
-| Retrieval | 25 relevant + 5 irrelevant questions | **88% recall@1**, **96% recall@3**, **100% recall@5**, MRR 0.928, and 100% irrelevant-query rejection |
-| Tool calling | 24 cases | **100%** required-tool selection, unnecessary-tool avoidance, argument accuracy, and execution success |
-| Prompt injection | 10 cases | No unauthorized direct writes or approval bypasses; **60% overall pass rate** because false action-completion claims remain |
-| Injected runtime failures | 3 cases | **100% expected-failure handling** and **66.7% overall accuracy**; one no-data grounding miss remains |
-| Latency | 30 successful live runs | Mean: 1.93 s RAG-only, 1.59 s one-tool, and 6.22 s multi-step investigation |
-
-These are small, curated, model- and environment-dependent datasets—not production benchmarks or security guarantees. The retrieval evaluation uses top-K 5, while the live chat path uses top-K 4. Full methodology, p50/p95 latency, limitations, and reproduction commands are in [docs/evaluation.md](docs/evaluation.md).
+These controls demonstrate a safer agent design; they do not make this demo a production security boundary. See [Known limitations](#known-limitations).
 
 ## Tech stack
 
@@ -118,8 +95,7 @@ These are small, curated, model- and environment-dependent datasets—not produc
 | Backend | ASP.NET Core 9, C#, Entity Framework Core, JWT bearer authentication |
 | AI and retrieval | Groq's OpenAI-compatible API, FastAPI, Sentence Transformers, `all-MiniLM-L6-v2`, pgvector |
 | Data | PostgreSQL 17 |
-| Observability | OpenTelemetry, Prometheus, Tempo, Grafana |
-| Delivery and quality | Docker Compose, xUnit, Oxlint, Python evaluation scripts |
+| Delivery and quality | Docker Compose, xUnit, Oxlint |
 
 ## Quick start
 
@@ -133,7 +109,7 @@ These are small, curated, model- and environment-dependent datasets—not produc
 ```powershell
 Copy-Item .env.example .env
 # Replace GROQ_API_KEY in .env, then run:
-docker compose --profile observability up --build
+docker compose up --build
 ```
 
 The embedding image downloads and bakes in `sentence-transformers/all-MiniLM-L6-v2`, so the first build takes longer. In Development, the API applies EF Core migrations and seeds demo services and incidents on startup.
@@ -170,19 +146,14 @@ Invoke-RestMethod `
 | --- | --- | --- |
 | Incident Copilot | <http://localhost:5173> | Main application |
 | Swagger UI | <http://localhost:5087/swagger> | Available in Development |
-| Grafana | <http://localhost:3000> | `admin` / `admin` for the local stack |
-| Prometheus | <http://localhost:9090> | Metrics store |
-| Tempo | <http://localhost:3200> | Trace backend |
-
-The observability services are optional. Omit `--profile observability` to run only the application services; OTLP export failures are non-fatal in Development.
 
 Stop the environment with:
 
 ```powershell
-docker compose --profile observability down
+docker compose down
 ```
 
-Add `--volumes` only when you intentionally want to delete the local database and observability data.
+Add `--volumes` only when you intentionally want to delete the local database data.
 
 ## Demo walkthrough
 
@@ -192,7 +163,6 @@ Add `--volumes` only when you intentionally want to delete the local database an
 4. Ask the copilot to create an incident. Review the proposed write and explicitly confirm or cancel it.
 5. Open the **Incidents** page to see the created record and update its lifecycle state.
 6. Start a second conversation and use the history picker to demonstrate user-scoped persistence.
-7. In Grafana Explore, query Tempo with `{ resource.service.name = "IncidentCopilot.Api" }` or inspect Prometheus metrics prefixed with `incidentcopilot_`.
 
 ## Local development
 
@@ -222,7 +192,6 @@ Important configuration:
 | `Jwt:SigningKey` | `JWT_SIGNING_KEY` or `Jwt__SigningKey` | Must be at least 32 characters outside local Development |
 | `ConnectionStrings:DefaultConnection` | `ConnectionStrings__DefaultConnection` | PostgreSQL connection string |
 | `EmbeddingService:BaseUrl` | `EmbeddingService__BaseUrl` | FastAPI embedding service URL |
-| `OpenTelemetry:Otlp:Endpoint` | `OpenTelemetry__Otlp__Endpoint` | OTLP gRPC collector endpoint |
 
 ## Verification
 
@@ -235,16 +204,7 @@ npm run lint
 npm run build
 Pop-Location
 
-docker compose --profile observability config
-```
-
-To inspect or reproduce the model-dependent evaluations after starting and indexing the stack:
-
-```powershell
-python evals/run_retrieval_eval.py --help
-python evals/run_tool_calling_eval.py --help
-python evals/run_prompt_injection_eval.py --help
-python evals/run_latency_eval.py --help
+docker compose config
 ```
 
 ## Repository layout
@@ -260,32 +220,24 @@ python evals/run_latency_eval.py --help
 |-- frontend/                 # React dashboard and chat UI
 |-- embedding-service/        # FastAPI sentence-transformer service
 |-- docs/
-|   |-- runbooks/             # Knowledge base indexed into pgvector
-|   |-- security-tests/
-|   `-- evaluation.md
-|-- evals/                    # Datasets, runners, and committed results
-|-- infra/observability/      # Collector, Prometheus, Tempo, and Grafana config
+|   `-- runbooks/             # Knowledge base indexed into pgvector
 `-- docker-compose.yml
 ```
 
 ## Known limitations
 
-- Telemetry and incidents are local simulations, not integrations with a real Prometheus, Loki, cloud, or ticketing environment.
+- Service telemetry and incidents are local simulations, not integrations with external monitoring or ticketing systems.
 - Conversation history is persisted but previous turns are not yet added to the model context; each prompt starts an independent agent run.
 - Authentication is appropriate for a local portfolio demo, but there is no refresh-token flow, login rate limiting, account recovery, role model, or production secret-management setup.
 - Incidents are shared operational records; the demo does not implement organization or tenant isolation.
 - The approval workflow covers one write tool and is not a general authorization framework.
-- Prompt-injection and failure evaluations contain known grounding misses, and all evaluation datasets are intentionally small.
 - Migrations run automatically in Development. A real deployment should apply reviewed migrations separately and use managed secrets.
-- The model and embedding model are fixed by configuration and have not been benchmarked against alternatives for quality, latency, or cost.
 
-## Further documentation
+## Documentation
 
-- [Evaluation methodology and results](docs/evaluation.md)
-- [Observability setup and example queries](infra/observability/README.md)
 - [Incident-response runbook](docs/runbooks/incident-response.md)
-- [Prompt-injection test notes](docs/security-tests/prompt-injection.md)
+- [Database connection exhaustion runbook](docs/runbooks/database-connection-exhaustion.md)
 
 ---
 
-This repository is a portfolio demonstration of full-stack engineering, agent orchestration, safe tool execution, retrieval evaluation, and production-style observability. It is not intended to manage real incidents without additional security, reliability, and integration work.
+This repository is a portfolio demonstration of full-stack engineering, agent orchestration, retrieval-augmented generation, and approval-gated tool execution. It is not intended to manage real incidents without additional security, reliability, and integration work.
